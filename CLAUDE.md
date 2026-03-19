@@ -58,6 +58,15 @@ The `extensions/` directory is configured as a workspace and wired into `.graphq
 - `shopify.web.toml` — Dev/build commands, Prisma predev hook
 - Embedded auth strategy with expiring offline access tokens enabled
 
+## Git Workflow
+
+After completing each phase, step, or feature (not mid-work, but at a logical completion point), always:
+
+1. Stage the changed files with `git add` (specific files, not `git add .`)
+2. Commit with a descriptive message summarizing what was built/changed
+
+Do not push — only commit. Do not batch multiple phases or features into a single commit. Each logical unit of work gets its own commit. If a Prisma migration was run, include the migration files in the commit.
+
 ## Code Style
 
 - 2-space indentation, Prettier formatting

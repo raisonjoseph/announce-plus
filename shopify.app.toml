@@ -2,12 +2,13 @@
 
 client_id = "512ea10fd2150c887cec1de609c54976"
 name = "AnnouncePlus"
-application_url = "https://example.com"
+application_url = "https://announceplus.fly.dev"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
 include_config_on_deploy = true
+dev_store_url = "makerbase-teststore.myshopify.com"
 
 [webhooks]
 api_version = "2026-01"
@@ -21,14 +22,13 @@ api_version = "2026-01"
   uri = "/webhooks/app/scopes_update"
 
 [access_scopes]
-# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "read_products,write_metaobjects,read_metaobjects"
 optional_scopes = [ ]
 use_legacy_install_flow = false
 
 [auth]
 redirect_urls = [
-  "https://localhost:3000/auth/callback",
-  "https://localhost:3000/auth/shopify/callback",
-  "https://localhost:3000/api/auth/callback"
+  "https://announceplus.fly.dev/auth/callback",
+  "https://announceplus.fly.dev/auth/shopify/callback",
+  "https://announceplus.fly.dev/api/auth/callback"
 ]

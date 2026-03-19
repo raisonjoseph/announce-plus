@@ -234,33 +234,53 @@ const S = {
     border: "none", cursor: "pointer", transition: "background 0.2s",
   },
   hero: {
-    maxWidth: 960, margin: "0 auto", padding: "72px 40px 56px", textAlign: "center",
+    maxWidth: 800, margin: "0 auto", padding: "80px 40px 64px", textAlign: "center",
   },
   badge: {
-    display: "inline-block", background: "#eff6ff", color: "#2563eb",
-    fontSize: 13, fontWeight: 600, padding: "6px 16px", borderRadius: 20, marginBottom: 28,
+    display: "inline-flex", alignItems: "center", gap: 6,
+    background: "#eff6ff", color: "#2563eb",
+    fontSize: 13, fontWeight: 600, padding: "7px 16px", borderRadius: 20, marginBottom: 32,
+    border: "1px solid #dbeafe",
+  },
+  badgeDot: {
+    width: 6, height: 6, borderRadius: "50%", background: "#22c55e",
   },
   h1: {
-    fontFamily: font, fontSize: "clamp(32px, 5vw, 52px)", fontWeight: 800,
-    lineHeight: 1.12, margin: "0 0 20px", color: "#0f172a", letterSpacing: "-0.025em",
+    fontFamily: font, fontSize: "clamp(36px, 5.5vw, 60px)", fontWeight: 800,
+    lineHeight: 1.08, margin: "0 0 24px", color: "#0f172a", letterSpacing: "-0.035em",
   },
-  h1Accent: { color: "#2563eb" },
+  h1Accent: { color: "#2563eb", display: "block", marginTop: 4 },
   heroP: {
-    fontSize: "clamp(16px, 2vw, 19px)", color: "#64748b", maxWidth: 580,
-    margin: "0 auto 36px", lineHeight: 1.65,
+    fontFamily: fontBody, fontSize: "clamp(17px, 2vw, 20px)", color: "#475569",
+    maxWidth: 520, margin: "0 auto 40px", lineHeight: 1.7, letterSpacing: "-0.01em",
   },
   heroCtas: {
-    display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap", marginBottom: 56,
+    display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap", marginBottom: 32,
+  },
+  heroProof: {
+    display: "flex", gap: 32, justifyContent: "center", flexWrap: "wrap",
+    marginBottom: 56, padding: "0 20px",
+  },
+  heroProofItem: {
+    display: "flex", flexDirection: "column", alignItems: "center", gap: 2,
+  },
+  heroProofNum: {
+    fontFamily: font, fontSize: 20, fontWeight: 700, color: "#0f172a",
+  },
+  heroProofLabel: {
+    fontSize: 12, color: "#94a3b8", fontWeight: 500, letterSpacing: "0.02em",
+    textTransform: "uppercase",
   },
   btnSecondary: {
-    background: "#f8fafc", color: "#0f172a", padding: "14px 32px", borderRadius: 10,
+    background: "#ffffff", color: "#0f172a", padding: "15px 32px", borderRadius: 10,
     fontSize: 16, fontWeight: 600, textDecoration: "none", display: "inline-block",
-    border: "1px solid #e2e8f0", cursor: "pointer", transition: "background 0.2s",
+    border: "1px solid #e2e8f0", cursor: "pointer", transition: "all 0.2s",
   },
   btnHero: {
-    background: "#2563eb", color: "#ffffff", padding: "14px 32px", borderRadius: 10,
+    background: "#2563eb", color: "#ffffff", padding: "15px 36px", borderRadius: 10,
     fontSize: 16, fontWeight: 700, textDecoration: "none", display: "inline-block",
-    cursor: "pointer", transition: "background 0.2s",
+    cursor: "pointer", transition: "all 0.2s",
+    boxShadow: "0 2px 8px rgba(37,99,235,0.25)",
   },
   mockup: {
     maxWidth: 680, margin: "0 auto", borderRadius: 14, overflow: "hidden",
@@ -425,23 +445,40 @@ export default function LandingPage() {
 
       {/* ── HERO ── */}
       <header style={S.hero}>
-        <div style={S.badge} role="status">Free to install — no credit card needed</div>
+        <div style={S.badge}>
+          <span style={S.badgeDot} />
+          Free to install — no credit card needed
+        </div>
         <h1 style={S.h1}>
-          Announcement bars that
-          <br />
-          <span style={S.h1Accent}>drive more sales</span>
+          Turn every visitor into
+          <span style={S.h1Accent}>a bigger order</span>
         </h1>
         <p style={S.heroP}>
-          Show a live free shipping progress bar that updates as customers add items to cart.
-          Boost average order value without discounting.
+          Add a free shipping progress bar to your Shopify store.
+          Customers see exactly how much more they need to spend —
+          and they do.
         </p>
         <div style={S.heroCtas}>
           <a href="https://apps.shopify.com/announceplus" style={S.btnHero}>
             Install free on Shopify
           </a>
-          <a href="#features" style={S.btnSecondary}>
+          <a href="#how-heading" style={S.btnSecondary}>
             See how it works
           </a>
+        </div>
+        <div style={S.heroProof}>
+          <div style={S.heroProofItem}>
+            <span style={S.heroProofNum}>+23%</span>
+            <span style={S.heroProofLabel}>Avg. order value</span>
+          </div>
+          <div style={S.heroProofItem}>
+            <span style={S.heroProofNum}>60s</span>
+            <span style={S.heroProofLabel}>Setup time</span>
+          </div>
+          <div style={S.heroProofItem}>
+            <span style={S.heroProofNum}>Free</span>
+            <span style={S.heroProofLabel}>To get started</span>
+          </div>
         </div>
 
         {/* Bar preview mockup */}

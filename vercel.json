@@ -1,0 +1,11 @@
+{
+  "buildCommand": "npx prisma generate && npm run build",
+  "installCommand": "npm install",
+  "framework": "remix",
+  "regions": ["sin1"],
+  "functions": {
+    "app/routes/**/*.{js,jsx,ts,tsx}": {
+      "maxDuration": 30
+    }
+  }
+}

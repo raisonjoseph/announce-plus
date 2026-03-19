@@ -2,10 +2,5 @@
   "buildCommand": "npx prisma generate && npm run build",
   "installCommand": "npm install",
   "framework": "remix",
-  "regions": ["sin1"],
-  "functions": {
-    "build/server/index.js": {
-      "includeFiles": "node_modules/@prisma/**,node_modules/@libsql/**,node_modules/.prisma/**"
-    }
-  }
+  "regions": ["sin1"]
 }

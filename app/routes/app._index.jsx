@@ -71,38 +71,7 @@ export const loader = async ({ request }) => {
     });
   }
 
-  // Auto-verify embed status on page load (production only)
   const isDev = process.env.NODE_ENV !== "production";
-
-  if (!isDev && !setup.embedActivated) {
-    try {
-      const embedResponse = await admin.graphql(
-        `#graphql
-          query GetActiveEmbeds {
-            currentAppInstallation {
-              activeEmbeds {
-                handle
-              }
-            }
-          }`,
-      );
-      const embedData = await embedResponse.json();
-      const activeEmbeds =
-        embedData?.data?.currentAppInstallation?.activeEmbeds ?? [];
-      const embedIsActive = activeEmbeds.some(
-        (e) => e.handle === "announceplus-bar",
-      );
-
-      if (embedIsActive) {
-        setup = await prisma.setupProgress.update({
-          where: { shop },
-          data: { embedActivated: true },
-        });
-      }
-    } catch (e) {
-      console.error("Could not check embed status", e);
-    }
-  }
 
   return json({
     announcements,

@@ -1,0 +1,72 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Note that some adapters may set a maximum length for the String type by default, please ensure your strings are long
+// enough when changing adapters.
+// See https://www.prisma.io/docs/orm/reference/prisma-schema-reference#string for more information
+datasource db {
+  provider = "sqlite"
+  url      = "file:dev.sqlite"
+}
+
+model Session {
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+}
+
+model Announcement {
+  id        String   @id @default(cuid())
+  shop      String
+  name      String
+  type      String   @default("topbar")
+  placement String   @default("all_pages")
+  position  String   @default("top")
+  status    String   @default("published")
+  settings  String   @default("{}")
+  viewCount Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shop])
+}
+
+model BarView {
+  id             String   @id @default(cuid())
+  shop           String
+  announcementId String
+  viewedAt       DateTime @default(now())
+
+  @@index([shop])
+  @@index([announcementId])
+  @@index([shop, viewedAt])
+}
+
+model SetupProgress {
+  id             String   @id @default(cuid())
+  shop           String   @unique
+  embedActivated Boolean  @default(false)
+  barCreated     Boolean  @default(false)
+  barConfirmed   Boolean  @default(false)
+  dismissed      Boolean  @default(false)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}

@@ -1,0 +1,150 @@
+/* AnnouncePlus Bar — announceplus-bar.css */
+/* AnnouncePlus by Makerbase — makerbase.app */
+
+.announceplus-bar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  width: 100%;
+  padding: 10px 40px 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  transition: background-color 0.3s ease, opacity 0.3s ease;
+}
+
+.announceplus-bar[data-position="bottom"] {
+  top: auto;
+  bottom: 0;
+  position: fixed;
+}
+
+.announceplus-bar.ap-hidden {
+  display: none;
+}
+
+.ap-bar-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 600px;
+}
+
+.ap-bar-text {
+  margin: 0;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  letter-spacing: 0.01em;
+  color: var(--ap-text-color);
+  line-height: 1.4;
+}
+
+.ap-bar-track {
+  width: 100%;
+  max-width: 400px;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  overflow: hidden;
+  transition: opacity 0.4s ease;
+}
+
+.ap-bar-track.ap-track-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.ap-bar-fill {
+  display: block !important;
+  height: 100%;
+  width: 0%;
+  background: var(--ap-bar-color);
+  border-radius: 999px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.ap-bar-cta {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 4px 14px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  background: var(--ap-text-color);
+  color: var(--ap-bg-color, #1a1a1a);
+  border: none;
+  transition: opacity 0.2s ease;
+}
+
+.ap-bar-cta:hover {
+  opacity: 0.85;
+}
+
+.ap-bar-close {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--ap-text-color);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.ap-bar-close:hover {
+  opacity: 1;
+}
+
+.announceplus-bar.ap-success .ap-bar-track {
+  opacity: 0;
+}
+
+.announceplus-bar.ap-success .ap-bar-fill {
+  width: 100%;
+}
+
+/* Bar height variants */
+.announceplus-bar.ap-small  { min-height: 36px; }
+.announceplus-bar.ap-medium { min-height: 48px; }
+.announceplus-bar.ap-large  { min-height: 60px; }
+
+/* Bottom position (sticky) */
+.announceplus-bar.ap-bottom {
+  position: sticky;
+  top: auto;
+  bottom: 0;
+}
+
+/* Text alignment variants */
+.ap-bar-inner.ap-left   { align-items: flex-start; }
+.ap-bar-inner.ap-center { align-items: center; }
+.ap-bar-inner.ap-right  { align-items: flex-end; }
+
+@media (max-width: 768px) {
+  .announceplus-bar {
+    padding: 8px 36px 8px 16px;
+  }
+
+  .ap-bar-text {
+    font-size: 12px;
+  }
+
+  .ap-bar-track {
+    max-width: 280px;
+  }
+}

@@ -1,0 +1,7 @@
+api_version = "2025-01"
+
+[[extensions]]
+uid = "76fa84cc-1efe-207e-dfaf-50f9878076fb06e50591"
+type = "theme"
+name = "AnnouncePlus Bar"
+handle = "announceplus-bar"

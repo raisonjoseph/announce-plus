@@ -1,0 +1,79 @@
+{%- assign ap_bars = shop.metafields.announceplus.bars -%}
+
+{%- if ap_bars != blank and ap_bars.value != blank -%}
+
+  <link rel="stylesheet" href="{{ 'announceplus-bar.css' | asset_url }}" />
+
+  {%- for bar in ap_bars.value -%}
+    {%- if bar.isEnabled and bar.status == "published" -%}
+      <div
+        id="ap-bar-{{ forloop.index }}"
+        class="announceplus-bar"
+        data-type="{{ bar.type }}"
+        data-threshold="{{ bar.thresholdCents | default: 5000 }}"
+        data-message="{{ bar.barMessage | escape }}"
+        data-success="{{ bar.successMessage | escape }}"
+        data-currency="{{ bar.currencySymbol | escape }}"
+        data-position="{{ bar.position | default: 'top' }}"
+        data-placement="{{ bar.placement | default: 'all_pages' }}"
+        data-bar-id="{{ bar.id }}"
+        data-app-url="{{ shop.metafields.announceplus.app_url.value | default: '' }}"
+        {%- if bar.announcementSubtype == 'rotating' and bar.rotatingMessages -%}
+          data-rotating-messages="{{ bar.rotatingMessages | json | escape }}"
+          data-rotation-speed="{{ bar.rotationSpeed | default: 4 }}"
+          data-rotation-animation="{{ bar.rotationAnimation | default: 'fade' }}"
+        {%- endif -%}
+        style="
+          background-color: {{ bar.backgroundColor | default: '#1a1a1a' }};
+          color: {{ bar.textColor | default: '#ffffff' }};
+          --ap-bar-color: {{ bar.barColor | default: '#22c55e' }};
+          --ap-text-color: {{ bar.textColor | default: '#ffffff' }};
+        "
+      >
+        <div class="ap-bar-inner">
+          <p class="ap-bar-text">
+            {%- if bar.type == 'topbar' -%}
+              {{ bar.message }}
+            {%- else -%}
+              Loading...
+            {%- endif -%}
+          </p>
+          {%- if bar.type == 'shipping_goal' -%}
+            <div class="ap-bar-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div class="ap-bar-fill"></div>
+            </div>
+          {%- endif -%}
+          {%- if bar.ctaText != blank -%}
+            <a href="{{ bar.ctaUrl }}" class="ap-bar-cta">
+              {{ bar.ctaText }}
+            </a>
+          {%- endif -%}
+        </div>
+        {%- if bar.showCloseButton != false -%}
+          <button class="ap-bar-close" aria-label="Close">&#215;</button>
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  {%- endfor -%}
+
+  <script src="{{ 'announceplus-bar.js' | asset_url }}" defer="defer"></script>
+
+{%- else -%}
+  {%- comment -%} No announcements configured — render nothing {%- endcomment -%}
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "AnnouncePlus Bar",
+  "target": "section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "is_enabled",
+      "label": "Enable AnnouncePlus",
+      "default": true,
+      "info": "Master toggle. Announcements are managed in the AnnouncePlus app."
+    }
+  ]
+}
+{% endschema %}

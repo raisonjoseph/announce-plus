@@ -1,0 +1,8 @@
+{
+  "name": "AnnouncePlus Bar",
+  "settings": {
+    "is_enabled": {
+      "label": "Enable AnnouncePlus"
+    }
+  }
+}

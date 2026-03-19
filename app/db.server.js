@@ -1,14 +1,10 @@
 import { PrismaClient } from "@prisma/client";
-import { createRequire } from "module";
-
-const require = createRequire(import.meta.url);
+import { PrismaLibSQL } from "@prisma/adapter-libsql";
+import { createClient } from "@libsql/client";
 
 let prisma;
 
 if (process.env.NODE_ENV === "production" && process.env.TURSO_DATABASE_URL) {
-  const { PrismaLibSQL } = require("@prisma/adapter-libsql");
-  const { createClient } = require("@libsql/client");
-
   const libsql = createClient({
     url: process.env.TURSO_DATABASE_URL,
     authToken: process.env.TURSO_AUTH_TOKEN,

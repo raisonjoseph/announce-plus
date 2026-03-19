@@ -68,7 +68,7 @@ export default defineConfig({
     assetsInlineLimit: 0,
   },
   ssr: {
-    noExternal: ["@prisma/adapter-libsql", "@libsql/client"],
+    noExternal: [/^@prisma\/adapter/, /^@prisma\/driver/, /^@libsql\//],
   },
   optimizeDeps: {
     include: ["@shopify/app-bridge-react", "@shopify/polaris"],

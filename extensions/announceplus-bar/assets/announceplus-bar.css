@@ -138,6 +138,8 @@
 /* Running line / marquee */
 .announceplus-bar.ap-running {
   overflow: hidden;
+  padding-left: 0;
+  padding-right: 0;
 }
 
 .announceplus-bar.ap-running .ap-bar-inner {
@@ -145,18 +147,30 @@
   flex-direction: row;
   overflow: hidden;
   width: 100%;
+  position: relative;
 }
 
 .announceplus-bar.ap-running .ap-bar-text {
   display: inline-block;
   white-space: nowrap;
-  animation: ap-marquee var(--ap-marquee-speed, 20s) linear infinite;
-  padding-right: 80px;
+  will-change: transform;
+  animation: ap-marquee-ltr var(--ap-marquee-speed, 15s) linear infinite;
 }
 
-@keyframes ap-marquee {
-  0%   { transform: translateX(100%); }
-  100% { transform: translateX(-100%); }
+/* Left to right (default) */
+@keyframes ap-marquee-ltr {
+  0%   { transform: translateX(calc(-100% - 40px)); }
+  100% { transform: translateX(calc(100vw + 40px)); }
+}
+
+/* Right to left */
+.announceplus-bar.ap-running.ap-rtl .ap-bar-text {
+  animation-name: ap-marquee-rtl;
+}
+
+@keyframes ap-marquee-rtl {
+  0%   { transform: translateX(calc(100vw + 40px)); }
+  100% { transform: translateX(calc(-100% - 40px)); }
 }
 
 .announceplus-bar.ap-running:hover .ap-bar-text {
@@ -166,6 +180,8 @@
 @media (prefers-reduced-motion: reduce) {
   .announceplus-bar.ap-running .ap-bar-text {
     animation: none;
+    text-align: center;
+    width: 100%;
   }
 }
 

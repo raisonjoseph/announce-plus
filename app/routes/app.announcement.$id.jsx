@@ -22,6 +22,7 @@ import {
   Checkbox,
   ChoiceList,
   Box,
+  RangeSlider,
 } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
@@ -163,6 +164,7 @@ export const action = async ({ request, params }) => {
       rotatingMessages,
       rotationSpeed: parseInt(formData.get("rotationSpeed"), 10) || 4,
       rotationAnimation: formData.get("rotationAnimation") || "fade",
+      marqueeDirection: formData.get("marqueeDirection") || "ltr",
     };
   } else {
     const threshold = parseFloat(formData.get("threshold")) || 50;
@@ -373,6 +375,9 @@ export default function AnnouncementEditorPage() {
   const [rotationAnimation, setRotationAnimation] = useState(
     saved.rotationAnimation || "fade",
   );
+  const [marqueeDirection, setMarqueeDirection] = useState(
+    saved.marqueeDirection || "ltr",
+  );
   const [threshold, setThreshold] = useState(
     (saved.threshold || SHIPPING_DEFAULTS.threshold).toString(),
   );
@@ -538,6 +543,7 @@ export default function AnnouncementEditorPage() {
       formData.set("rotatingMessages", JSON.stringify(rotatingMessages));
       formData.set("rotationSpeed", rotationSpeed);
       formData.set("rotationAnimation", rotationAnimation);
+      formData.set("marqueeDirection", marqueeDirection);
     } else {
       formData.set("threshold", threshold);
       formData.set("currencySymbol", currencySymbol);
@@ -557,7 +563,7 @@ export default function AnnouncementEditorPage() {
     startDate, endDate, activeDays, customerTags, countryTarget,
     exitIntent, utmSource, utmMedium, utmCampaign, minPageViews,
     announcementSubtype, message, showCta, ctaText, ctaUrl,
-    rotatingMessages, rotationSpeed, rotationAnimation,
+    rotatingMessages, rotationSpeed, rotationAnimation, marqueeDirection,
     threshold, currencySymbol, barMessage, successMessage, barColor,
     showPercentage, submit,
   ]);
@@ -803,7 +809,7 @@ export default function AnnouncementEditorPage() {
                             </FormLayout>
                           </BlockStack>
                         ) : announcementSubtype === "running" ? (
-                          <BlockStack gap="300">
+                          <BlockStack gap="400">
                             <Text variant="headingSm" as="h3">
                               Running line
                             </Text>
@@ -815,15 +821,39 @@ export default function AnnouncementEditorPage() {
                               helpText="This text scrolls continuously across the bar"
                               autoComplete="off"
                             />
-                            <TextField
-                              label="Scroll speed (seconds)"
-                              type="number"
-                              value={rotationSpeed}
-                              onChange={setRotationSpeed}
-                              helpText="Time for one full scroll. Lower = faster. Default: 15"
-                              autoComplete="off"
-                              suffix="sec"
+                            <Select
+                              label="Scroll direction"
+                              options={[
+                                { label: "Left to right \u2192", value: "ltr" },
+                                { label: "\u2190 Right to left", value: "rtl" },
+                              ]}
+                              value={marqueeDirection}
+                              onChange={setMarqueeDirection}
                             />
+                            <BlockStack gap="100">
+                              <Text variant="bodySm" as="label">
+                                Scroll speed: {rotationSpeed}s
+                              </Text>
+                              <RangeSlider
+                                label="Scroll speed"
+                                labelHidden
+                                value={parseInt(rotationSpeed, 10) || 15}
+                                min={3}
+                                max={40}
+                                step={1}
+                                onChange={(val) => setRotationSpeed(val.toString())}
+                                suffix={
+                                  <Text variant="bodySm" as="span" tone="subdued">
+                                    {parseInt(rotationSpeed, 10) <= 8
+                                      ? "Fast"
+                                      : parseInt(rotationSpeed, 10) <= 20
+                                        ? "Medium"
+                                        : "Slow"}
+                                  </Text>
+                                }
+                                output
+                              />
+                            </BlockStack>
                           </BlockStack>
                         ) : (
                           <BlockStack gap="300">

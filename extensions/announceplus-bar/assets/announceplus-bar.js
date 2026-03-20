@@ -474,7 +474,11 @@
   function setupRunningLine(bar) {
     bar.classList.add('ap-running');
     var speed = parseInt(bar.dataset.rotationSpeed, 10) || 15;
+    var direction = bar.dataset.marqueeDirection || 'ltr';
     bar.style.setProperty('--ap-marquee-speed', speed + 's');
+    if (direction === 'rtl') {
+      bar.classList.add('ap-rtl');
+    }
   }
 
   function setupRotatingMessages(bar) {

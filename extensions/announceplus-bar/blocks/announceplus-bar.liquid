@@ -49,6 +49,7 @@
           data-rotating-messages="{{ bar.rotatingMessages | json | escape }}"
           data-rotation-speed="{{ bar.rotationSpeed | default: 4 }}"
           data-rotation-animation="{{ bar.rotationAnimation | default: 'fade' }}"
+          data-marquee-direction="{{ bar.marqueeDirection | default: 'ltr' }}"
         {%- endif -%}
         style="
           background-color: {{ bar.backgroundColor | default: '#1a1a1a' }};

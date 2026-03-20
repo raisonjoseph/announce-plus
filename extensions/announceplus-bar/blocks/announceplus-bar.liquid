@@ -90,6 +90,39 @@
     {%- endif -%}
   {%- endfor -%}
 
+  {%- comment -%} Product shipping goals — rendered hidden, JS injects below Add to Cart {%- endcomment -%}
+  {%- for bar in ap_bars.value -%}
+    {%- if bar.type == 'product_shipping_goal' and bar.isEnabled and bar.status == 'published' -%}
+      <div
+        class="announceplus-product-goal ap-hidden"
+        data-type="product_shipping_goal"
+        data-threshold="{{ bar.thresholdCents | default: 5000 }}"
+        data-message="{{ bar.barMessage | escape }}"
+        data-success="{{ bar.successMessage | escape }}"
+        data-empty-message="{{ bar.emptyMessage | escape }}"
+        data-currency="{{ bar.currencySymbol | escape }}"
+        data-bar-id="{{ bar.id }}"
+        data-app-url="{{ shop.metafields.announceplus.app_url.value | default: '' }}"
+        data-product-target="{{ bar.productTarget | default: 'all' }}"
+        data-target-product-handles="{{ bar.targetProductHandles | escape }}"
+        data-target-collection-handles="{{ bar.targetCollectionHandles | escape }}"
+        style="
+          background-color: {{ bar.backgroundColor | default: '#f8fafc' }};
+          color: {{ bar.textColor | default: '#1e293b' }};
+          --ap-bar-color: {{ bar.barColor | default: '#22c55e' }};
+          --ap-text-color: {{ bar.textColor | default: '#1e293b' }};
+          --ap-font-size: {% case bar.fontSize %}{% when 'small' %}12px{% when 'large' %}16px{% else %}14px{% endcase %};
+          --ap-font-weight: {% case bar.fontWeight %}{% when 'medium' %}500{% when 'bold' %}700{% else %}400{% endcase %};
+        "
+      >
+        <p class="ap-product-goal-text">{{ bar.emptyMessage | default: 'Loading...' }}</p>
+        <div class="ap-product-goal-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div class="ap-product-goal-fill"></div>
+        </div>
+      </div>
+    {%- endif -%}
+  {%- endfor -%}
+
   <script src="{{ 'announceplus-bar.js' | asset_url }}" defer="defer"></script>
 
 {%- else -%}

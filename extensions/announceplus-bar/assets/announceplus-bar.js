@@ -242,6 +242,34 @@
     return count >= min;
   }
 
+  function checkProductGoalTarget(el) {
+    var target = el.dataset.productTarget || 'all';
+    if (target === 'all') return true;
+
+    // Get current product handle from URL
+    var path = window.location.pathname;
+    var productMatch = path.match(/\/products\/([^/?#]+)/);
+    if (!productMatch) return false; // Not on a product page
+
+    var currentHandle = productMatch[1];
+
+    if (target === 'specific_products') {
+      var handles = (el.dataset.targetProductHandles || '').split(',');
+      for (var i = 0; i < handles.length; i++) {
+        if (handles[i].trim() === currentHandle) return true;
+      }
+      return false;
+    }
+
+    if (target === 'specific_collections') {
+      // Can't easily check collections client-side without the product object
+      // Allow it and let Liquid handle server-side filtering when possible
+      return true;
+    }
+
+    return true;
+  }
+
   function shouldShowBar(bar) {
     if (!checkPageTarget(bar)) return false;
     if (!checkVisitorTarget(bar)) return false;
@@ -755,11 +783,52 @@
       }
     });
 
-    // Register product goal elements
-    pGoals.forEach(function (el) {
-      productGoals.push(el);
-      el.setAttribute('data-ap-ready', 'true');
-    });
+    // Auto-inject product goals below Add to Cart button (only on product pages)
+    var isProductPage = /\/products\//.test(window.location.pathname);
+    if (pGoals.length > 0 && isProductPage) {
+      var addToCartBtn = document.querySelector(
+        'form[action="/cart/add"] [type="submit"], ' +
+        'form[action="/cart/add"] button[name="add"], ' +
+        '.product-form__submit, ' +
+        '.shopify-payment-button, ' +
+        'button[data-testid="Checkout-button"], ' +
+        '.product-form__buttons, ' +
+        '[data-shopify="payment-button"], ' +
+        '.buy-buttons, ' +
+        '.product__submit'
+      );
+
+      // Walk up to find the parent wrapper of the button group
+      var insertTarget = addToCartBtn;
+      if (insertTarget) {
+        // Go up to the form or button container level
+        while (insertTarget && insertTarget.parentElement) {
+          var parent = insertTarget.parentElement;
+          var tag = parent.tagName.toLowerCase();
+          if (tag === 'form' || tag === 'section' || tag === 'main' ||
+              parent.classList.contains('product-form') ||
+              parent.classList.contains('product__info-wrapper')) {
+            break;
+          }
+          insertTarget = parent;
+        }
+      }
+
+      pGoals.forEach(function (el) {
+        // Check product targeting
+        var show = checkProductGoalTarget(el);
+        if (!show) return;
+
+        if (insertTarget && insertTarget.parentNode) {
+          // Move from hidden embed location to after the Add to Cart
+          insertTarget.parentNode.insertBefore(el, insertTarget.nextSibling);
+        }
+
+        el.classList.remove('ap-hidden');
+        productGoals.push(el);
+        el.setAttribute('data-ap-ready', 'true');
+      });
+    }
 
     // If there are shipping bars, product goals, or cart-state bars, set up cart listeners
     if (shippingBars.length > 0 || productGoals.length > 0 || cartStateBars.length > 0) {

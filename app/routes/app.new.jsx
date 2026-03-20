@@ -85,35 +85,9 @@ export default function NewAnnouncementPage() {
             {/* Card 3: Product Shipping Goal */}
             <Card>
               <BlockStack gap="400">
-                <div
-                  style={{
-                    background: "#f8fafc",
-                    borderRadius: "8px",
-                    padding: "12px",
-                    border: "1px solid #e2e8f0",
-                  }}
-                >
-                  <div style={{ fontSize: "13px", color: "#1e293b", textAlign: "center", marginBottom: "6px" }}>
-                    Free shipping for orders over $50!
-                  </div>
-                  <div
-                    style={{
-                      height: "4px",
-                      background: "#e2e8f0",
-                      borderRadius: "999px",
-                      overflow: "hidden",
-                    }}
-                  >
-                    <div
-                      style={{
-                        height: "100%",
-                        width: "40%",
-                        background: "#22c55e",
-                        borderRadius: "999px",
-                      }}
-                    />
-                  </div>
-                </div>
+                <img src="/thumbnails/thumbnail-product-shipping-goal.svg"
+                  alt="Product shipping goal preview"
+                  style={{ width: "100%", borderRadius: "8px" }} />
                 <BlockStack gap="100">
                   <Text variant="headingMd" as="h3">
                     Product shipping goal

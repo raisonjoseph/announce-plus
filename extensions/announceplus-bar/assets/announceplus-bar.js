@@ -329,6 +329,7 @@
       threshold: threshold,
       message: bar.dataset.message || 'Spend {amount} more for free shipping!',
       success: bar.dataset.success || "You've unlocked free shipping!",
+      emptyMessage: bar.dataset.emptyMessage || '',
       currency: bar.dataset.currency || '$',
       showPercentage: bar.dataset.showPercentage === 'true',
     };
@@ -366,6 +367,18 @@
     var trackEl = bar.querySelector('.ap-bar-track');
 
     if (!textEl || !fillEl || !trackEl) return;
+
+    // Empty cart — show info message, hide progress bar
+    if (cartTotal === 0 && settings.emptyMessage) {
+      var thresholdFormatted = formatAmount(threshold, settings.currency);
+      textEl.textContent = settings.emptyMessage.replace('{order-value}', thresholdFormatted);
+      trackEl.classList.add('ap-track-hidden');
+      bar.classList.remove('ap-success', 'ap-progress');
+      bar.classList.add('ap-info');
+      return;
+    }
+
+    bar.classList.remove('ap-info');
 
     if (remaining === 0) {
       textEl.textContent = settings.success;

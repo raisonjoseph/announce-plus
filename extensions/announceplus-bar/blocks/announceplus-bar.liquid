@@ -13,6 +13,7 @@
         data-threshold="{{ bar.thresholdCents | default: 5000 }}"
         data-message="{{ bar.barMessage | escape }}"
         data-success="{{ bar.successMessage | escape }}"
+        data-empty-message="{{ bar.emptyMessage | escape }}"
         data-currency="{{ bar.currencySymbol | escape }}"
         data-position="{{ bar.position | default: 'top' }}"
         data-placement="{{ bar.placement | default: 'all_pages' }}"
@@ -65,6 +66,8 @@
           <p class="ap-bar-text">
             {%- if bar.type == 'topbar' -%}
               {{ bar.message }}
+            {%- elsif bar.emptyMessage != blank -%}
+              {{ bar.emptyMessage | replace: '{order-value}', bar.threshold | default: '$50' }}
             {%- else -%}
               Loading...
             {%- endif -%}

@@ -182,6 +182,7 @@ export const action = async ({ request, params }) => {
         "Spend {amount} more for free shipping!",
       successMessage:
         formData.get("successMessage") || "You've unlocked free shipping!",
+      emptyMessage: formData.get("emptyMessage") || "",
       barColor: formData.get("barColor") || "#22c55e",
       showPercentage: formData.get("showPercentage") === "true",
     };
@@ -436,6 +437,9 @@ export default function AnnouncementEditorPage() {
   const [successMessage, setSuccessMessage] = useState(
     saved.successMessage || SHIPPING_DEFAULTS.successMessage,
   );
+  const [emptyMessage, setEmptyMessage] = useState(
+    saved.emptyMessage || "Free shipping for orders over {order-value}!",
+  );
 
   // ─── Design tab state ───
   const [backgroundColor, setBackgroundColor] = useState(
@@ -595,6 +599,7 @@ export default function AnnouncementEditorPage() {
       formData.set("currencySymbol", currencySymbol);
       formData.set("barMessage", barMessage);
       formData.set("successMessage", successMessage);
+      formData.set("emptyMessage", emptyMessage);
       formData.set("barColor", barColor);
       formData.set("showPercentage", showPercentage.toString());
     }
@@ -610,7 +615,7 @@ export default function AnnouncementEditorPage() {
     exitIntent, utmSource, utmMedium, utmCampaign, minPageViews,
     announcementSubtype, message, showCta, ctaText, ctaUrl,
     rotatingMessages, rotationSpeed, rotationAnimation, marqueeDirection,
-    threshold, currencySymbol, barMessage, successMessage, barColor,
+    threshold, currencySymbol, barMessage, successMessage, emptyMessage, barColor,
     showPercentage, submit,
   ]);
 
@@ -1010,6 +1015,14 @@ export default function AnnouncementEditorPage() {
                               value={successMessage}
                               onChange={setSuccessMessage}
                               autoComplete="off"
+                            />
+                            <TextField
+                              label="Empty cart message"
+                              value={emptyMessage}
+                              onChange={setEmptyMessage}
+                              helpText="Shown before customer adds products. Use {order-value} for the threshold. Leave empty to show progress bar immediately."
+                              autoComplete="off"
+                              placeholder="Free shipping for orders over {order-value}!"
                             />
                           </FormLayout>
                         </BlockStack>

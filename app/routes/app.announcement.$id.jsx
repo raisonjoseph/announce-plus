@@ -459,7 +459,7 @@ export default function AnnouncementEditorPage() {
   const tabs = [
     { id: "content", content: "Content" },
     { id: "design", content: "Design" },
-    { id: "placement", content: "Placement" },
+    { id: "targeting", content: "Targeting" },
   ];
 
   const isSaving = navigation.state === "submitting";

@@ -485,52 +485,29 @@
     if (!textEl || !inner) return;
 
     var original = textEl.textContent.trim();
-    inner.innerHTML = '';
 
-    // Build two identical sets — animation shifts by exactly one set width
-    var setA = document.createElement('div');
-    setA.className = 'ap-marquee-set';
-    var setB = document.createElement('div');
-    setB.className = 'ap-marquee-set';
-
-    // Measure one item
-    var measure = document.createElement('span');
-    measure.className = 'ap-marquee-item';
-    measure.textContent = original;
-    measure.style.visibility = 'hidden';
-    measure.style.position = 'absolute';
-    inner.appendChild(measure);
-    var itemWidth = measure.offsetWidth + 80;
-    inner.removeChild(measure);
-
-    // Fill each set with enough copies to cover the viewport
-    var perSet = Math.max(2, Math.ceil(window.innerWidth / itemWidth) + 1);
-
-    for (var i = 0; i < perSet; i++) {
-      var s1 = document.createElement('span');
-      s1.className = 'ap-marquee-item';
-      s1.textContent = original;
-      setA.appendChild(s1);
-
-      var s2 = document.createElement('span');
-      s2.className = 'ap-marquee-item';
-      s2.textContent = original;
-      setB.appendChild(s2);
+    // Build content for one set — enough copies to fill the bar
+    function buildSet() {
+      var set = document.createElement('div');
+      set.className = 'ap-marquee-set';
+      // Use enough copies to ensure the set fills its min-width:100%
+      for (var i = 0; i < 10; i++) {
+        var span = document.createElement('span');
+        span.className = 'ap-marquee-item';
+        span.textContent = original;
+        set.appendChild(span);
+      }
+      return set;
     }
 
-    var track = document.createElement('div');
-    track.className = 'ap-marquee-track';
-    track.appendChild(setA);
-    track.appendChild(setB);
-    inner.appendChild(track);
+    // Clear inner and add two identical sets
+    inner.innerHTML = '';
+    inner.appendChild(buildSet());
+    inner.appendChild(buildSet());
 
-    // After layout, measure one set and set the animation distance
+    // Start animation after paint
     requestAnimationFrame(function () {
-      var setWidth = setA.offsetWidth;
-      bar.style.setProperty('--ap-marquee-distance', '-' + setWidth + 'px');
-      requestAnimationFrame(function () {
-        bar.classList.add('ap-marquee-ready');
-      });
+      bar.classList.add('ap-marquee-ready');
     });
   }
 

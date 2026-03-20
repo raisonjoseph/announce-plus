@@ -798,19 +798,28 @@ export default function AnnouncementEditorPage() {
                                 onChange={setRotationAnimation}
                               />
                               <BlockStack gap="100">
-                                <Text variant="bodySm" as="label">
-                                  Rotation speed: {rotationSpeed}s per message
-                                </Text>
-                                <RangeSlider
-                                  label="Rotation speed"
-                                  labelHidden
-                                  value={parseInt(rotationSpeed, 10) || 4}
-                                  min={2}
-                                  max={15}
-                                  step={1}
-                                  onChange={(val) => setRotationSpeed(val.toString())}
-                                  output
-                                />
+                                <InlineStack align="space-between">
+                                  <Text variant="bodySm" as="label">Rotation speed</Text>
+                                  <Text variant="bodySm" as="span" tone="subdued">
+                                    {rotationSpeed}s per message
+                                  </Text>
+                                </InlineStack>
+                                <InlineStack gap="200" blockAlign="center">
+                                  <Text variant="bodySm" as="span" tone="subdued">Slow</Text>
+                                  <div style={{ flex: 1 }}>
+                                    <RangeSlider
+                                      label="Rotation speed"
+                                      labelHidden
+                                      value={17 - (parseInt(rotationSpeed, 10) || 4)}
+                                      min={2}
+                                      max={15}
+                                      step={1}
+                                      onChange={(val) => setRotationSpeed((17 - val).toString())}
+                                      output
+                                    />
+                                  </div>
+                                  <Text variant="bodySm" as="span" tone="subdued">Fast</Text>
+                                </InlineStack>
                               </BlockStack>
                             </FormLayout>
                           </BlockStack>
@@ -837,28 +846,33 @@ export default function AnnouncementEditorPage() {
                               onChange={setMarqueeDirection}
                             />
                             <BlockStack gap="100">
-                              <Text variant="bodySm" as="label">
-                                Scroll speed: {rotationSpeed}s
-                              </Text>
-                              <RangeSlider
-                                label="Scroll speed"
-                                labelHidden
-                                value={parseInt(rotationSpeed, 10) || 15}
-                                min={3}
-                                max={40}
-                                step={1}
-                                onChange={(val) => setRotationSpeed(val.toString())}
-                                suffix={
-                                  <Text variant="bodySm" as="span" tone="subdued">
-                                    {parseInt(rotationSpeed, 10) <= 8
-                                      ? "Fast"
-                                      : parseInt(rotationSpeed, 10) <= 20
-                                        ? "Medium"
-                                        : "Slow"}
-                                  </Text>
-                                }
-                                output
-                              />
+                              <InlineStack align="space-between">
+                                <Text variant="bodySm" as="label">Scroll speed</Text>
+                                <Text variant="bodySm" as="span" tone="subdued">
+                                  {(() => {
+                                    const s = parseInt(rotationSpeed, 10) || 15;
+                                    if (s <= 8) return "Fast";
+                                    if (s <= 20) return "Normal";
+                                    return "Slow";
+                                  })()}
+                                </Text>
+                              </InlineStack>
+                              <InlineStack gap="200" blockAlign="center">
+                                <Text variant="bodySm" as="span" tone="subdued">Slow</Text>
+                                <div style={{ flex: 1 }}>
+                                  <RangeSlider
+                                    label="Scroll speed"
+                                    labelHidden
+                                    value={43 - (parseInt(rotationSpeed, 10) || 15)}
+                                    min={3}
+                                    max={40}
+                                    step={1}
+                                    onChange={(val) => setRotationSpeed((43 - val).toString())}
+                                    output
+                                  />
+                                </div>
+                                <Text variant="bodySm" as="span" tone="subdued">Fast</Text>
+                              </InlineStack>
                             </BlockStack>
                           </BlockStack>
                         ) : (

@@ -1075,47 +1075,6 @@ export default function AnnouncementEditorPage() {
                             />
                           </FormLayout>
                         </BlockStack>
-                        {type === "product_shipping_goal" && (
-                          <>
-                            <Divider />
-                            <BlockStack gap="300">
-                              <Text variant="headingSm" as="h3">
-                                Product targeting
-                              </Text>
-                              <ChoiceList
-                                choices={[
-                                  { label: "All products", value: "all" },
-                                  { label: "Specific products", value: "specific_products" },
-                                  { label: "Specific collections", value: "specific_collections" },
-                                ]}
-                                selected={[productTarget]}
-                                onChange={(v) => setProductTarget(v[0])}
-                              />
-                              {productTarget === "specific_products" && (
-                                <TextField
-                                  label="Product handles"
-                                  value={targetProductHandles}
-                                  onChange={setTargetProductHandles}
-                                  helpText="Comma-separated product handles from your store URL. e.g. blue-tshirt, red-hoodie"
-                                  autoComplete="off"
-                                  multiline={2}
-                                  placeholder="blue-tshirt, red-hoodie"
-                                />
-                              )}
-                              {productTarget === "specific_collections" && (
-                                <TextField
-                                  label="Collection handles"
-                                  value={targetCollectionHandles}
-                                  onChange={setTargetCollectionHandles}
-                                  helpText="Comma-separated collection handles. e.g. summer-sale, new-arrivals"
-                                  autoComplete="off"
-                                  multiline={2}
-                                  placeholder="summer-sale, new-arrivals"
-                                />
-                              )}
-                            </BlockStack>
-                          </>
-                        )}
                       </>
                     )}
                   </BlockStack>
@@ -1232,29 +1191,81 @@ export default function AnnouncementEditorPage() {
                   </BlockStack>
                 )}
 
-                {/* ─── PLACEMENT TAB ─── */}
+                {/* ─── TARGETING TAB ─── */}
                 {selectedTab === 2 && (
                   <BlockStack gap="500">
-                    <BlockStack gap="300">
-                      <Text variant="headingSm" as="h3">
-                        Pages
-                      </Text>
-                      <ChoiceList
-                        allowMultiple
-                        title="Show on these pages"
-                        choices={[
-                          { label: "All pages", value: "all_pages" },
-                          { label: "Homepage only", value: "homepage" },
-                          { label: "Collection pages", value: "collections" },
-                          { label: "Product pages", value: "products" },
-                          { label: "Cart page", value: "cart" },
-                        ]}
-                        selected={pages}
-                        onChange={setPages}
-                      />
-                    </BlockStack>
 
-                    <Divider />
+                    {/* Product targeting — only for product_shipping_goal */}
+                    {type === "product_shipping_goal" && (
+                      <>
+                        <BlockStack gap="300">
+                          <Text variant="headingSm" as="h3">
+                            Products
+                          </Text>
+                          <Text variant="bodySm" as="p" tone="subdued">
+                            This bar appears below the Add to Cart button on product pages.
+                          </Text>
+                          <ChoiceList
+                            title="Show on"
+                            choices={[
+                              { label: "All products", value: "all" },
+                              { label: "Specific products", value: "specific_products" },
+                              { label: "Specific collections", value: "specific_collections" },
+                            ]}
+                            selected={[productTarget]}
+                            onChange={(v) => setProductTarget(v[0])}
+                          />
+                          {productTarget === "specific_products" && (
+                            <TextField
+                              label="Product handles"
+                              value={targetProductHandles}
+                              onChange={setTargetProductHandles}
+                              helpText="Comma-separated product handles. e.g. blue-tshirt, red-hoodie"
+                              autoComplete="off"
+                              multiline={2}
+                              placeholder="blue-tshirt, red-hoodie"
+                            />
+                          )}
+                          {productTarget === "specific_collections" && (
+                            <TextField
+                              label="Collection handles"
+                              value={targetCollectionHandles}
+                              onChange={setTargetCollectionHandles}
+                              helpText="Comma-separated collection handles. e.g. summer-sale, new-arrivals"
+                              autoComplete="off"
+                              multiline={2}
+                              placeholder="summer-sale, new-arrivals"
+                            />
+                          )}
+                        </BlockStack>
+                        <Divider />
+                      </>
+                    )}
+
+                    {/* Pages — hidden for product_shipping_goal */}
+                    {type !== "product_shipping_goal" && (
+                      <>
+                        <BlockStack gap="300">
+                          <Text variant="headingSm" as="h3">
+                            Pages
+                          </Text>
+                          <ChoiceList
+                            allowMultiple
+                            title="Show on these pages"
+                            choices={[
+                              { label: "All pages", value: "all_pages" },
+                              { label: "Homepage only", value: "homepage" },
+                              { label: "Collection pages", value: "collections" },
+                              { label: "Product pages", value: "products" },
+                              { label: "Cart page", value: "cart" },
+                            ]}
+                            selected={pages}
+                            onChange={setPages}
+                          />
+                        </BlockStack>
+                        <Divider />
+                      </>
+                    )}
 
                     <BlockStack gap="300">
                       <Text variant="headingSm" as="h3">

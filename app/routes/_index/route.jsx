@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { redirect } from "@remix-run/node";
 import { Form, useLoaderData } from "@remix-run/react";
 import { login } from "../../shopify.server";
@@ -46,14 +47,21 @@ export const meta = () => [
         "price": "0",
         "priceCurrency": "USD",
         "name": "Free",
-        "description": "1 announcement bar, 2000 monthly views"
+        "description": "1 bar, 1 product goal, 2000 monthly views"
+      },
+      {
+        "@type": "Offer",
+        "price": "4.99",
+        "priceCurrency": "USD",
+        "name": "Starter",
+        "description": "3 bars, 10000 views, URL and device targeting, running line"
       },
       {
         "@type": "Offer",
         "price": "9.99",
         "priceCurrency": "USD",
         "name": "Pro",
-        "description": "Unlimited bars, unlimited views, scheduling, advanced targeting"
+        "description": "Unlimited bars and views, scheduling, country targeting, exit intent"
       }
     ],
     "author": {
@@ -386,37 +394,146 @@ const S = {
   footerLink: { fontSize: 13, color: "#94a3b8", textDecoration: "none" },
 };
 
+// ─── Pricing Section ────────────────────────────────
+
+function PricingSection({ plans }) {
+  const [yearly, setYearly] = useState(false);
+
+  return (
+    <section style={{ padding: "80px 40px", maxWidth: 960, margin: "0 auto", textAlign: "center" }} aria-labelledby="price-heading">
+      <h2 id="price-heading" style={S.h2}>Simple, transparent pricing</h2>
+      <p style={{ ...S.subhead, marginBottom: 24 }}>Start free. Upgrade when you need more.</p>
+
+      {/* Toggle */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginBottom: 40 }}>
+        <span style={{ fontSize: 14, fontWeight: yearly ? 400 : 700, color: "#0f172a" }}>Monthly</span>
+        <div
+          onClick={() => setYearly(!yearly)}
+          style={{
+            width: 48, height: 26, borderRadius: 13,
+            background: yearly ? "#2563eb" : "#cbd5e1",
+            position: "relative", cursor: "pointer", transition: "background 0.2s",
+          }}
+        >
+          <div style={{
+            width: 20, height: 20, borderRadius: "50%", background: "#fff",
+            position: "absolute", top: 3, left: yearly ? 25 : 3,
+            transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+          }} />
+        </div>
+        <span style={{ fontSize: 14, fontWeight: yearly ? 700 : 400, color: "#0f172a" }}>
+          Yearly
+        </span>
+        <span style={{
+          background: "#dcfce7", color: "#15803d", fontSize: 11, fontWeight: 700,
+          padding: "3px 10px", borderRadius: 20,
+        }}>Save 20%</span>
+      </div>
+
+      {/* Cards */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, textAlign: "left" }}>
+        {plans.map((plan, i) => (
+          <div key={i} style={{
+            border: plan.highlight ? "2px solid #2563eb" : "1px solid #e2e8f0",
+            borderRadius: 14, padding: "32px 24px", position: "relative", background: "#fff",
+            display: "flex", flexDirection: "column",
+          }}>
+            {plan.highlight && (
+              <div style={{
+                position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)",
+                background: "#2563eb", color: "#fff", fontSize: 11, fontWeight: 700,
+                padding: "3px 14px", borderRadius: 20,
+              }}>MOST POPULAR</div>
+            )}
+            <div style={{ fontFamily: S.h2.fontFamily, fontSize: 18, fontWeight: 700, marginBottom: 12 }}>{plan.name}</div>
+            <div style={{ display: "flex", alignItems: "end", gap: 4, marginBottom: 4 }}>
+              <span style={{
+                fontFamily: S.h2.fontFamily, fontSize: 40, fontWeight: 800, lineHeight: 1,
+                color: plan.highlight ? "#2563eb" : "#0f172a",
+              }}>{yearly ? plan.yearlyPrice : plan.price}</span>
+              {plan.price !== "$0" && <span style={{ fontSize: 13, color: "#94a3b8", paddingBottom: 4 }}>/mo</span>}
+            </div>
+            <div style={{ fontSize: 13, color: "#94a3b8", marginBottom: 20 }}>
+              {plan.price === "$0" ? "Free forever" : yearly ? "Billed yearly — save 20%" : "Billed monthly"}
+            </div>
+            <div style={{ height: 1, background: "#f1f5f9", marginBottom: 20 }} />
+            <ul style={{ listStyle: "none", padding: 0, margin: 0, flex: 1 }}>
+              {plan.features.map((f, fi) => (
+                <li key={fi} style={{
+                  fontSize: 14, color: "#334155", padding: "6px 0",
+                  display: "flex", alignItems: "center", gap: 8,
+                }}>
+                  <IconCheck />{f}
+                </li>
+              ))}
+            </ul>
+            <a href="https://apps.shopify.com/announceplus" style={{
+              display: "block", textAlign: "center", padding: 13, borderRadius: 8,
+              fontSize: 15, fontWeight: 700, textDecoration: "none", marginTop: 20,
+              background: plan.highlight ? "#2563eb" : "#f1f5f9",
+              color: plan.highlight ? "#fff" : "#0f172a",
+              border: plan.highlight ? "none" : "1px solid #e2e8f0",
+            }}>{plan.cta}</a>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 // ─── Component ──────────────────────────────────────
 
 export default function LandingPage() {
   const { showForm } = useLoaderData();
 
+  const announcementTypes = [
+    {
+      title: "Announcement bar",
+      desc: "Sticky bar at the top or bottom of any page. Static, running marquee, or rotating messages with CTA buttons.",
+      preview: { bg: "#0f172a", text: "Free shipping on all orders this weekend!", hasBtn: true },
+    },
+    {
+      title: "Free shipping goal",
+      desc: "Live progress bar that tracks the cart total and shows how much more the customer needs for free shipping.",
+      preview: { bg: "#0f172a", text: "Spend $20 more for free shipping!", hasProgress: true },
+    },
+    {
+      title: "Product shipping goal",
+      desc: "Inline progress bar below the Add to Cart button on product pages. Target specific products or collections.",
+      preview: { bg: "#f0fdf4", textColor: "#15803d", text: "Free shipping for orders over $50!", hasProgress: true, light: true },
+    },
+  ];
+
   const features = [
-    { icon: <IconChart />, title: "Live progress bar", desc: "Tracks the cart total in real time and shows customers exactly how much more they need for free shipping. No page reload required." },
-    { icon: <IconPalette />, title: "Fully customizable", desc: "Change colors, messages, threshold, fonts, and CTA buttons from your Shopify admin. No code or developer needed." },
-    { icon: <IconMegaphone />, title: "Announcement bars", desc: "Display flash sale alerts, seasonal promotions, discount codes, and store-wide messages in a clean top or bottom bar." },
-    { icon: <IconSmartphone />, title: "Mobile responsive", desc: "Automatically adapts to every screen size. Optimized font sizes and bar height for mobile, tablet, and desktop shoppers." },
-    { icon: <IconZap />, title: "One-click install", desc: "Add to your theme in under 60 seconds from the Shopify theme editor. Works with all Online Store 2.0 themes." },
-    { icon: <IconGift />, title: "Free to start", desc: "Get started with a free plan including 1 bar and 2,000 monthly views. Upgrade to Pro for unlimited bars, views, and scheduling." },
+    { icon: <IconChart />, title: "Live cart tracking", desc: "Progress bars update instantly as customers add or remove items. No page reload needed." },
+    { icon: <IconPalette />, title: "Fully customizable", desc: "Colors, fonts, messages, CTA buttons, height, position — all configurable from your Shopify admin." },
+    { icon: <IconMegaphone />, title: "3 announcement types", desc: "Top/bottom bars, free shipping goals, and inline product goals. Static, running marquee, or rotating." },
+    { icon: <IconSmartphone />, title: "18 targeting rules", desc: "Page, device, visitor, cart value, URL patterns, customer tags, country, UTM, exit intent, scheduling, and more." },
+    { icon: <IconZap />, title: "One-click install", desc: "Enable the app embed and you're live. No code, no theme editing. Works with all Online Store 2.0 themes." },
+    { icon: <IconGift />, title: "Free forever plan", desc: "1 bar + 2,000 monthly views free forever. Upgrade to Starter or Pro as you grow." },
   ];
 
   const faqs = [
-    { q: "What is AnnouncePlus?", a: "AnnouncePlus is a Shopify app that adds customizable announcement bars and a free shipping progress goal to your store. It shows customers how much more they need to spend to qualify for free shipping, encouraging them to add more items to their cart." },
-    { q: "How much does AnnouncePlus cost?", a: "AnnouncePlus offers a free plan with 1 announcement bar and 2,000 monthly views. The Pro plan at $9.99/month includes unlimited bars, unlimited views, scheduling, and advanced targeting." },
+    { q: "What is AnnouncePlus?", a: "AnnouncePlus is a Shopify app with three announcement types: sticky bars, free shipping progress goals, and inline product shipping goals. It helps increase average order value by showing customers how close they are to free shipping." },
+    { q: "How much does AnnouncePlus cost?", a: "Free plan: 1 bar, 2,000 views. Starter ($4.99/mo or $3.99/mo yearly): 3 bars, 10,000 views, advanced targeting. Pro ($9.99/mo or $7.99/mo yearly): unlimited everything, scheduling, country targeting, exit intent, and priority support." },
     { q: "Does AnnouncePlus require coding?", a: "No. AnnouncePlus installs with one click and is configured entirely from your Shopify admin. No code changes are needed." },
     { q: "Does the free shipping bar update in real time?", a: "Yes. The progress bar tracks your customer's cart total and updates the remaining amount and progress bar instantly as items are added or removed. No page reload is needed." },
+    { q: "What targeting rules are available?", a: "AnnouncePlus offers 18 targeting rules including page type, URL patterns, device, new vs returning visitors, cart value, cart items, customer tags, country, UTM source, exit intent, scroll depth, time delay, and date scheduling." },
     { q: "Does it work with my Shopify theme?", a: "AnnouncePlus works with all Shopify Online Store 2.0 themes. It's added as a theme app extension, so it integrates natively without modifying your theme code." },
-    { q: "Can I show different bars on different pages?", a: "Yes. You can configure placement rules to show bars on all pages, homepage only, collection pages, product pages, or the cart page." },
   ];
 
   const plans = [
     {
-      name: "Free", price: "$0", period: "forever", highlight: false, cta: "Get started free",
-      features: ["1 announcement bar", "Free shipping progress goal", "2,000 monthly views", "Basic customization", "Email support"],
+      name: "Free", price: "$0", yearlyPrice: "$0", period: "forever", highlight: false, cta: "Get started free",
+      features: ["1 announcement bar", "1 product shipping goal", "2,000 monthly views", "Page & visitor targeting", "Email support"],
     },
     {
-      name: "Pro", price: "$9.99", period: "per month", highlight: true, cta: "Start free trial",
-      features: ["Unlimited announcement bars", "Unlimited monthly views", "Scheduling & automation", "Advanced page targeting", "Priority support"],
+      name: "Starter", price: "$4.99", yearlyPrice: "$3.99", period: "per month", highlight: false, cta: "Start with Starter",
+      features: ["3 bars & goals", "10,000 monthly views", "URL & device targeting", "Cart value & item rules", "Running line & rotating"],
+    },
+    {
+      name: "Pro", price: "$9.99", yearlyPrice: "$7.99", period: "per month", highlight: true, cta: "Start free trial",
+      features: ["Unlimited bars & views", "Date & day scheduling", "Country & tag targeting", "UTM & exit intent", "Priority support"],
     },
   ];
 
@@ -518,6 +635,53 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── ANNOUNCEMENT TYPES ── */}
+      <section style={{ padding: "80px 40px" }} aria-labelledby="types-heading">
+        <div style={S.sectionInner}>
+          <h2 id="types-heading" style={S.h2}>Three ways to boost sales</h2>
+          <p style={S.subhead}>Choose the right announcement type for your goal.</p>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+            {announcementTypes.map((t, i) => (
+              <div key={i} style={{ border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden" }}>
+                <div style={{
+                  background: t.preview.bg,
+                  color: t.preview.textColor || "#fff",
+                  padding: "16px 20px",
+                  textAlign: "center",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 8,
+                }}>
+                  <span>{t.preview.text}</span>
+                  {t.preview.hasProgress && (
+                    <div style={{
+                      width: "80%", height: 4,
+                      background: t.preview.light ? "#dcfce7" : "rgba(255,255,255,0.15)",
+                      borderRadius: 999, overflow: "hidden",
+                    }}>
+                      <div style={{ height: "100%", width: "55%", background: "#22c55e", borderRadius: 999 }} />
+                    </div>
+                  )}
+                  {t.preview.hasBtn && (
+                    <span style={{
+                      background: "#fff", color: "#0f172a", padding: "4px 14px",
+                      borderRadius: 4, fontSize: 12, fontWeight: 600,
+                    }}>Shop now</span>
+                  )}
+                </div>
+                <div style={{ padding: "20px" }}>
+                  <h3 style={{ ...S.featTitle, marginBottom: 6 }}>{t.title}</h3>
+                  <p style={S.featDesc}>{t.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── FEATURES ── */}
       <section id="features" style={S.featSection} aria-labelledby="feat-heading">
         <div style={S.sectionInner}>
@@ -536,30 +700,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── PRICING ── */}
-      <section style={S.priceSection} aria-labelledby="price-heading">
-        <h2 id="price-heading" style={S.h2}>Simple, transparent pricing</h2>
-        <p style={{ ...S.subhead, marginBottom: 40 }}>Start free. Upgrade when you need more.</p>
-        <div style={S.priceGrid}>
-          {plans.map((plan, i) => (
-            <div key={i} style={S.priceCard(plan.highlight)}>
-              {plan.highlight && <div style={S.priceBadge}>MOST POPULAR</div>}
-              <div style={S.priceName}>{plan.name}</div>
-              <div style={S.priceAmt(plan.highlight)}>{plan.price}</div>
-              <div style={S.pricePer}>{plan.period}</div>
-              <ul style={S.priceList}>
-                {plan.features.map((f, fi) => (
-                  <li key={fi} style={S.priceLi}>
-                    <IconCheck />{f}
-                  </li>
-                ))}
-              </ul>
-              <a href="https://apps.shopify.com/announceplus" style={S.priceCta(plan.highlight)}>
-                {plan.cta}
-              </a>
-            </div>
-          ))}
-        </div>
-      </section>
+      <PricingSection plans={plans} />
 
       {/* ── FAQ (AEO-optimized) ── */}
       <section style={S.faqSection} aria-labelledby="faq-heading">

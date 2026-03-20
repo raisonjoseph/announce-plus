@@ -158,6 +158,11 @@
   will-change: transform;
 }
 
+.ap-marquee-set {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
 .ap-marquee-item {
   flex-shrink: 0;
   display: inline-block;
@@ -178,7 +183,7 @@
 
 @keyframes ap-scroll {
   from { transform: translateX(0); }
-  to   { transform: translateX(-50%); }
+  to   { transform: translateX(var(--ap-marquee-distance, -50%)); }
 }
 
 .announceplus-bar.ap-running:hover .ap-marquee-track {

@@ -487,35 +487,50 @@
     var original = textEl.textContent.trim();
     inner.innerHTML = '';
 
-    // Create track
-    var track = document.createElement('div');
-    track.className = 'ap-marquee-track';
+    // Build two identical sets — animation shifts by exactly one set width
+    var setA = document.createElement('div');
+    setA.className = 'ap-marquee-set';
+    var setB = document.createElement('div');
+    setB.className = 'ap-marquee-set';
 
-    // Measure one copy to know how many we need
+    // Measure one item
     var measure = document.createElement('span');
     measure.className = 'ap-marquee-item';
     measure.textContent = original;
     measure.style.visibility = 'hidden';
     measure.style.position = 'absolute';
     inner.appendChild(measure);
-    var itemWidth = measure.offsetWidth + 80; // 80 = 40px padding each side
+    var itemWidth = measure.offsetWidth + 80;
     inner.removeChild(measure);
 
-    // Need enough copies so total width >= 2x viewport
-    var copies = Math.max(4, Math.ceil((window.innerWidth * 2) / itemWidth) + 2);
+    // Fill each set with enough copies to cover the viewport
+    var perSet = Math.max(2, Math.ceil(window.innerWidth / itemWidth) + 1);
 
-    for (var i = 0; i < copies; i++) {
-      var span = document.createElement('span');
-      span.className = 'ap-marquee-item';
-      span.textContent = original;
-      track.appendChild(span);
+    for (var i = 0; i < perSet; i++) {
+      var s1 = document.createElement('span');
+      s1.className = 'ap-marquee-item';
+      s1.textContent = original;
+      setA.appendChild(s1);
+
+      var s2 = document.createElement('span');
+      s2.className = 'ap-marquee-item';
+      s2.textContent = original;
+      setB.appendChild(s2);
     }
 
+    var track = document.createElement('div');
+    track.className = 'ap-marquee-track';
+    track.appendChild(setA);
+    track.appendChild(setB);
     inner.appendChild(track);
 
-    // Start animation after layout
+    // After layout, measure one set and set the animation distance
     requestAnimationFrame(function () {
-      bar.classList.add('ap-marquee-ready');
+      var setWidth = setA.offsetWidth;
+      bar.style.setProperty('--ap-marquee-distance', '-' + setWidth + 'px');
+      requestAnimationFrame(function () {
+        bar.classList.add('ap-marquee-ready');
+      });
     });
   }
 

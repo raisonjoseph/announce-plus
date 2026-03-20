@@ -640,44 +640,122 @@ export default function LandingPage() {
         <div style={S.sectionInner}>
           <h2 id="types-heading" style={S.h2}>Three ways to boost sales</h2>
           <p style={S.subhead}>Choose the right announcement type for your goal.</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
-            {announcementTypes.map((t, i) => (
-              <div key={i} style={{ border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden" }}>
-                <div style={{
-                  background: t.preview.bg,
-                  color: t.preview.textColor || "#fff",
-                  padding: "16px 20px",
-                  textAlign: "center",
-                  fontSize: 13,
-                  fontWeight: 500,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: 8,
-                }}>
-                  <span>{t.preview.text}</span>
-                  {t.preview.hasProgress && (
-                    <div style={{
-                      width: "80%", height: 4,
-                      background: t.preview.light ? "#dcfce7" : "rgba(255,255,255,0.15)",
-                      borderRadius: 999, overflow: "hidden",
-                    }}>
-                      <div style={{ height: "100%", width: "55%", background: "#22c55e", borderRadius: 999 }} />
-                    </div>
-                  )}
-                  {t.preview.hasBtn && (
-                    <span style={{
-                      background: "#fff", color: "#0f172a", padding: "4px 14px",
-                      borderRadius: 4, fontSize: 12, fontWeight: 600,
-                    }}>Shop now</span>
-                  )}
-                </div>
-                <div style={{ padding: "20px" }}>
-                  <h3 style={{ ...S.featTitle, marginBottom: 6 }}>{t.title}</h3>
-                  <p style={S.featDesc}>{t.desc}</p>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 48 }}>
+
+            {/* Type 1: Announcement Bar */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
+              <div>
+                <div style={{ display: "inline-block", background: "#eff6ff", color: "#2563eb", fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 20, marginBottom: 16 }}>Type 1</div>
+                <h3 style={{ fontFamily: font, fontSize: 24, fontWeight: 700, color: "#0f172a", marginBottom: 12, lineHeight: 1.3 }}>Announcement bar</h3>
+                <p style={{ fontSize: 15, color: "#64748b", lineHeight: 1.7, marginBottom: 16 }}>
+                  Sticky bar at the top or bottom of any page. Choose from static text, a running marquee that scrolls continuously, or multiple rotating messages with fade/slide animations.
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {["Static", "Running marquee", "Rotating", "CTA button", "Dismissible"].map((t, i) => (
+                    <span key={i} style={{ fontSize: 12, color: "#475569", background: "#f1f5f9", padding: "4px 10px", borderRadius: 6 }}>{t}</span>
+                  ))}
                 </div>
               </div>
-            ))}
+              <div style={{ border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.04)" }}>
+                <div style={{ background: "#f8fafc", padding: "8px 12px", display: "flex", gap: 5, alignItems: "center", borderBottom: "1px solid #e2e8f0" }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff5f56" }} />
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffbd2e" }} />
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#27c93f" }} />
+                  <div style={{ flex: 1, background: "#e2e8f0", borderRadius: 4, height: 14, marginLeft: 6 }} />
+                </div>
+                <div style={{ background: "#0f172a", color: "#fff", padding: "10px 16px", display: "flex", alignItems: "center", justifyContent: "center", gap: 12, fontSize: 13, fontWeight: 500 }}>
+                  <span>Free shipping on all orders this weekend!</span>
+                  <span style={{ background: "#fff", color: "#0f172a", padding: "3px 12px", borderRadius: 4, fontSize: 11, fontWeight: 600, whiteSpace: "nowrap" }}>Shop now</span>
+                </div>
+                <div style={{ padding: 16, background: "#fff" }}>
+                  <div style={{ display: "flex", gap: 12 }}>
+                    <div style={{ width: 50, height: 50, borderRadius: 8, background: "#f1f5f9" }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ height: 10, background: "#f1f5f9", borderRadius: 4, marginBottom: 8, width: "70%" }} />
+                      <div style={{ height: 8, background: "#f1f5f9", borderRadius: 4, width: "50%" }} />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Type 2: Free Shipping Goal */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
+              <div style={{ order: 2 }}>
+                <div style={{ display: "inline-block", background: "#f0fdf4", color: "#15803d", fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 20, marginBottom: 16 }}>Type 2</div>
+                <h3 style={{ fontFamily: font, fontSize: 24, fontWeight: 700, color: "#0f172a", marginBottom: 12, lineHeight: 1.3 }}>Free shipping goal</h3>
+                <p style={{ fontSize: 15, color: "#64748b", lineHeight: 1.7, marginBottom: 16 }}>
+                  A live progress bar that tracks the cart total in real time. Shows customers exactly how much more they need to spend to unlock free shipping. Updates instantly as items are added or removed.
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {["Real-time tracking", "Progress bar", "Empty cart message", "Success state", "Percentage display"].map((t, i) => (
+                    <span key={i} style={{ fontSize: 12, color: "#475569", background: "#f1f5f9", padding: "4px 10px", borderRadius: 6 }}>{t}</span>
+                  ))}
+                </div>
+              </div>
+              <div style={{ order: 1, border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.04)" }}>
+                <div style={{ background: "#f8fafc", padding: "8px 12px", display: "flex", gap: 5, alignItems: "center", borderBottom: "1px solid #e2e8f0" }}>
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff5f56" }} />
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#ffbd2e" }} />
+                  <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#27c93f" }} />
+                  <div style={{ flex: 1, background: "#e2e8f0", borderRadius: 4, height: 14, marginLeft: 6 }} />
+                </div>
+                <div style={{ background: "#0f172a", color: "#fff", padding: "12px 16px", display: "flex", flexDirection: "column", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 500 }}>
+                  <span>Spend $18.50 more for free shipping!</span>
+                  <div style={{ width: "70%", height: 5, background: "rgba(255,255,255,0.12)", borderRadius: 999, overflow: "hidden" }}>
+                    <div style={{ height: "100%", width: "63%", background: "#22c55e", borderRadius: 999 }} />
+                  </div>
+                </div>
+                <div style={{ padding: 16, background: "#fff" }}>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                    {[1, 2, 3].map(n => (
+                      <div key={n} style={{ textAlign: "center" }}>
+                        <div style={{ height: 48, background: "#f1f5f9", borderRadius: 6, marginBottom: 6 }} />
+                        <div style={{ height: 6, background: "#f1f5f9", borderRadius: 3, marginBottom: 4, width: "80%", margin: "0 auto 4px" }} />
+                        <div style={{ height: 6, background: "#e2e8f0", borderRadius: 3, width: "40%", margin: "0 auto" }} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Type 3: Product Shipping Goal */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 40, alignItems: "center" }}>
+              <div>
+                <div style={{ display: "inline-block", background: "#fef3c7", color: "#92400e", fontSize: 12, fontWeight: 600, padding: "4px 12px", borderRadius: 20, marginBottom: 16 }}>Type 3</div>
+                <h3 style={{ fontFamily: font, fontSize: 24, fontWeight: 700, color: "#0f172a", marginBottom: 12, lineHeight: 1.3 }}>Product shipping goal</h3>
+                <p style={{ fontSize: 15, color: "#64748b", lineHeight: 1.7, marginBottom: 16 }}>
+                  An inline progress bar that appears below the Add to Cart button on product pages. Automatically injected — no theme editing needed. Target all products, specific products, or entire collections.
+                </p>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {["Auto-injected", "All products", "Specific products", "By collection", "Inline design"].map((t, i) => (
+                    <span key={i} style={{ fontSize: 12, color: "#475569", background: "#f1f5f9", padding: "4px 10px", borderRadius: 6 }}>{t}</span>
+                  ))}
+                </div>
+              </div>
+              <div style={{ border: "1px solid #e2e8f0", borderRadius: 12, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.04)" }}>
+                <div style={{ padding: 20, background: "#fff" }}>
+                  <div style={{ display: "flex", gap: 16 }}>
+                    <div style={{ width: 100, height: 120, background: "#f1f5f9", borderRadius: 8, flexShrink: 0 }} />
+                    <div style={{ flex: 1 }}>
+                      <div style={{ height: 10, background: "#e2e8f0", borderRadius: 4, marginBottom: 8, width: "80%" }} />
+                      <div style={{ height: 8, background: "#f1f5f9", borderRadius: 4, marginBottom: 6, width: "50%" }} />
+                      <div style={{ height: 12, background: "#e2e8f0", borderRadius: 4, marginBottom: 16, width: "30%" }} />
+                      <div style={{ background: "#0f172a", color: "#fff", textAlign: "center", padding: "8px 0", borderRadius: 6, fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Add to cart</div>
+                      <div style={{ background: "#f0fdf4", border: "1px solid #bbf7d0", borderRadius: 6, padding: "8px 12px", textAlign: "center" }}>
+                        <div style={{ fontSize: 11, color: "#15803d", fontWeight: 500, marginBottom: 4 }}>Free shipping for orders over $50!</div>
+                        <div style={{ height: 3, background: "#dcfce7", borderRadius: 999, overflow: "hidden" }}>
+                          <div style={{ height: "100%", width: "35%", background: "#22c55e", borderRadius: 999 }} />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </section>

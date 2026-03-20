@@ -162,7 +162,7 @@ export const action = async ({ request, params }) => {
       ctaText: formData.get("ctaText") || "",
       ctaUrl: formData.get("ctaUrl") || "",
       rotatingMessages,
-      rotationSpeed: parseInt(formData.get("rotationSpeed"), 10) || 4,
+      rotationSpeed: parseInt(formData.get("rotationSpeed"), 10) || 15,
       rotationAnimation: formData.get("rotationAnimation") || "fade",
       marqueeDirection: formData.get("marqueeDirection") || "ltr",
     };
@@ -370,7 +370,7 @@ export default function AnnouncementEditorPage() {
     saved.rotatingMessages || ["Welcome to our store!", "Free shipping on orders over $50"],
   );
   const [rotationSpeed, setRotationSpeed] = useState(
-    (saved.rotationSpeed || 4).toString(),
+    (saved.rotationSpeed || (saved.announcementSubtype === "running" ? 15 : 4)).toString(),
   );
   const [rotationAnimation, setRotationAnimation] = useState(
     saved.rotationAnimation || "fade",
@@ -797,15 +797,21 @@ export default function AnnouncementEditorPage() {
                                 value={rotationAnimation}
                                 onChange={setRotationAnimation}
                               />
-                              <TextField
-                                label="Rotation speed (seconds)"
-                                type="number"
-                                value={rotationSpeed}
-                                onChange={setRotationSpeed}
-                                helpText="How long each message stays visible"
-                                autoComplete="off"
-                                suffix="sec"
-                              />
+                              <BlockStack gap="100">
+                                <Text variant="bodySm" as="label">
+                                  Rotation speed: {rotationSpeed}s per message
+                                </Text>
+                                <RangeSlider
+                                  label="Rotation speed"
+                                  labelHidden
+                                  value={parseInt(rotationSpeed, 10) || 4}
+                                  min={2}
+                                  max={15}
+                                  step={1}
+                                  onChange={(val) => setRotationSpeed(val.toString())}
+                                  output
+                                />
+                              </BlockStack>
                             </FormLayout>
                           </BlockStack>
                         ) : announcementSubtype === "running" ? (

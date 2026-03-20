@@ -45,11 +45,11 @@
         data-min-page-views="{{ bar.minPageViews | default: 0 }}"
         data-bar-id="{{ bar.id }}"
         data-app-url="{{ shop.metafields.announceplus.app_url.value | default: '' }}"
+        data-rotation-speed="{{ bar.rotationSpeed | default: 15 }}"
+        data-marquee-direction="{{ bar.marqueeDirection | default: 'ltr' }}"
         {%- if bar.announcementSubtype == 'rotating' and bar.rotatingMessages -%}
           data-rotating-messages="{{ bar.rotatingMessages | json | escape }}"
-          data-rotation-speed="{{ bar.rotationSpeed | default: 4 }}"
           data-rotation-animation="{{ bar.rotationAnimation | default: 'fade' }}"
-          data-marquee-direction="{{ bar.marqueeDirection | default: 'ltr' }}"
         {%- endif -%}
         style="
           background-color: {{ bar.backgroundColor | default: '#1a1a1a' }};

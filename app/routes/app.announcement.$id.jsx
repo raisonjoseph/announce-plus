@@ -126,6 +126,9 @@ export const action = async ({ request, params }) => {
     textAlign: formData.get("textAlign") || "center",
     pages: formData.get("pages") || "all_pages",
     showTo: formData.get("showTo") || "all",
+    deviceTarget: formData.get("deviceTarget") || "all",
+    delaySeconds: parseInt(formData.get("delaySeconds"), 10) || 0,
+    cartState: formData.get("cartState") || "any",
     announcementSubtype: formData.get("announcementSubtype") || "simple",
   };
 
@@ -404,6 +407,15 @@ export default function AnnouncementEditorPage() {
   const [showTo, setShowTo] = useState(
     saved.showTo || "all",
   );
+  const [deviceTarget, setDeviceTarget] = useState(
+    saved.deviceTarget || "all",
+  );
+  const [delaySeconds, setDelaySeconds] = useState(
+    (saved.delaySeconds || 0).toString(),
+  );
+  const [cartState, setCartState] = useState(
+    saved.cartState || "any",
+  );
   const [showPercentage, setShowPercentage] = useState(
     saved.showPercentage ?? false,
   );
@@ -438,6 +450,9 @@ export default function AnnouncementEditorPage() {
     formData.set("textAlign", textAlign);
     formData.set("pages", pages.join(","));
     formData.set("showTo", showTo);
+    formData.set("deviceTarget", deviceTarget);
+    formData.set("delaySeconds", delaySeconds);
+    formData.set("cartState", cartState);
     formData.set("announcementSubtype", announcementSubtype);
 
     if (type === "topbar") {
@@ -460,7 +475,8 @@ export default function AnnouncementEditorPage() {
   }, [
     type, name, pages, position, isEnabled, backgroundColor, textColor,
     barHeight, isSticky, showCloseButton, fontSize, fontWeight, textAlign,
-    showTo, announcementSubtype, message, showCta, ctaText, ctaUrl,
+    showTo, deviceTarget, delaySeconds, cartState,
+    announcementSubtype, message, showCta, ctaText, ctaUrl,
     rotatingMessages, rotationSpeed, rotationAnimation,
     threshold, currencySymbol, barMessage, successMessage, barColor,
     showPercentage, submit,
@@ -940,7 +956,7 @@ export default function AnnouncementEditorPage() {
 
                     <BlockStack gap="300">
                       <Text variant="headingSm" as="h3">
-                        Visibility
+                        Visitors
                       </Text>
                       <Checkbox
                         label="Enable this announcement"
@@ -956,6 +972,59 @@ export default function AnnouncementEditorPage() {
                         ]}
                         value={showTo}
                         onChange={setShowTo}
+                      />
+                    </BlockStack>
+
+                    <Divider />
+
+                    <BlockStack gap="300">
+                      <Text variant="headingSm" as="h3">
+                        Device
+                      </Text>
+                      <Select
+                        label="Show on"
+                        options={[
+                          { label: "All devices", value: "all" },
+                          { label: "Desktop only", value: "desktop" },
+                          { label: "Mobile only", value: "mobile" },
+                        ]}
+                        value={deviceTarget}
+                        onChange={setDeviceTarget}
+                      />
+                    </BlockStack>
+
+                    <Divider />
+
+                    <BlockStack gap="300">
+                      <Text variant="headingSm" as="h3">
+                        Cart condition
+                      </Text>
+                      <Select
+                        label="Show when cart is"
+                        options={[
+                          { label: "Any state (always)", value: "any" },
+                          { label: "Empty", value: "empty" },
+                          { label: "Not empty", value: "non_empty" },
+                        ]}
+                        value={cartState}
+                        onChange={setCartState}
+                      />
+                    </BlockStack>
+
+                    <Divider />
+
+                    <BlockStack gap="300">
+                      <Text variant="headingSm" as="h3">
+                        Display delay
+                      </Text>
+                      <TextField
+                        label="Show after (seconds)"
+                        type="number"
+                        value={delaySeconds}
+                        onChange={setDelaySeconds}
+                        helpText="0 = show immediately"
+                        autoComplete="off"
+                        suffix="sec"
                       />
                     </BlockStack>
 

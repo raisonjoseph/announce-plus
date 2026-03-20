@@ -16,6 +16,12 @@
         data-currency="{{ bar.currencySymbol | escape }}"
         data-position="{{ bar.position | default: 'top' }}"
         data-placement="{{ bar.placement | default: 'all_pages' }}"
+        data-template="{{ template.name | default: '' }}"
+        data-show-to="{{ bar.showTo | default: 'all' }}"
+        data-device="{{ bar.deviceTarget | default: 'all' }}"
+        data-delay="{{ bar.delaySeconds | default: 0 }}"
+        data-cart-state="{{ bar.cartState | default: 'any' }}"
+        data-customer-logged-in="{{ customer | default: false }}"
         data-bar-id="{{ bar.id }}"
         data-app-url="{{ shop.metafields.announceplus.app_url.value | default: '' }}"
         {%- if bar.announcementSubtype == 'rotating' and bar.rotatingMessages -%}

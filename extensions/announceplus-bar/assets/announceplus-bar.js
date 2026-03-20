@@ -8,9 +8,92 @@
   var POLL_INTERVAL = 3000;
   var DEFAULT_THRESHOLD = 5000;
 
+  var VISITOR_KEY = 'ap_visitor';
   var lastCartTotal = null;
+  var lastCartItemCount = null;
   var pollTimer = null;
   var shippingBars = [];
+  var cartStateBars = [];
+
+  // ─── Targeting Engine ───
+
+  function checkPageTarget(bar) {
+    var placement = (bar.dataset.placement || 'all_pages');
+    if (placement.indexOf('all_pages') !== -1) return true;
+
+    var template = bar.dataset.template || '';
+    var path = window.location.pathname;
+
+    var map = {
+      homepage: function () { return template === 'index' || path === '/'; },
+      collections: function () { return template === 'collection' || path.indexOf('/collections/') === 0; },
+      products: function () { return template === 'product' || path.indexOf('/products/') === 0; },
+      cart: function () { return template === 'cart' || path === '/cart'; },
+      blog: function () { return template === 'blog' || template === 'article' || path.indexOf('/blogs/') === 0; },
+    };
+
+    var pages = placement.split(',');
+    for (var i = 0; i < pages.length; i++) {
+      var check = map[pages[i].trim()];
+      if (check && check()) return true;
+    }
+    return false;
+  }
+
+  function checkVisitorTarget(bar) {
+    var showTo = bar.dataset.showTo || 'all';
+    if (showTo === 'all') return true;
+
+    var isReturning = false;
+    try {
+      isReturning = !!localStorage.getItem(VISITOR_KEY);
+      if (!isReturning) localStorage.setItem(VISITOR_KEY, '1');
+    } catch (e) {}
+
+    if (showTo === 'new') return !isReturning;
+    if (showTo === 'returning') return isReturning;
+    return true;
+  }
+
+  function checkDeviceTarget(bar) {
+    var target = bar.dataset.device || 'all';
+    if (target === 'all') return true;
+
+    var isMobile = window.innerWidth < 768;
+    if (target === 'mobile') return isMobile;
+    if (target === 'desktop') return !isMobile;
+    return true;
+  }
+
+  function checkCartState(bar, cart) {
+    var state = bar.dataset.cartState || 'any';
+    if (state === 'any') return true;
+    if (!cart) return state === 'empty';
+
+    if (state === 'empty') return cart.item_count === 0;
+    if (state === 'non_empty') return cart.item_count > 0;
+    return true;
+  }
+
+  function shouldShowBar(bar) {
+    if (!checkPageTarget(bar)) return false;
+    if (!checkVisitorTarget(bar)) return false;
+    if (!checkDeviceTarget(bar)) return false;
+    return true;
+  }
+
+  function applyDelay(bar, callback) {
+    var delay = parseInt(bar.dataset.delay, 10) || 0;
+    if (delay > 0) {
+      bar.style.display = 'none';
+      setTimeout(function () {
+        bar.style.display = '';
+        callback();
+      }, delay * 1000);
+    } else {
+      callback();
+    }
+  }
 
   function readSettings(bar) {
     var threshold = parseInt(bar.dataset.threshold, 10);
@@ -262,38 +345,89 @@
     }
   }
 
+  function updateCartStateBars(cart) {
+    cartStateBars.forEach(function (bar) {
+      if (checkCartState(bar, cart)) {
+        bar.classList.remove('ap-hidden');
+      } else {
+        bar.classList.add('ap-hidden');
+      }
+    });
+  }
+
   async function init() {
     var bars = document.querySelectorAll('.announceplus-bar');
     if (!bars.length) return;
 
     console.log('[AnnouncePlus] Found', bars.length, 'bar(s). Initialising...');
 
+    // Fetch cart upfront for cart-based targeting
+    var cart = await fetchCart();
+
     bars.forEach(function (bar) {
+      // Check if bar was dismissed
       if (isBarClosed(bar)) {
         bar.classList.add('ap-hidden');
         return;
       }
 
-      setupCloseButton(bar);
-
-      var settings = readSettings(bar);
-      if (settings.type === 'shipping_goal') {
-        shippingBars.push(bar);
-      } else if (settings.type === 'topbar') {
-        setupRotatingMessages(bar);
+      // Run targeting checks
+      if (!shouldShowBar(bar)) {
+        bar.classList.add('ap-hidden');
+        return;
       }
 
-      bar.setAttribute('data-ap-ready', 'true');
-      trackView(bar);
+      // Check cart state targeting
+      var cartState = bar.dataset.cartState || 'any';
+      if (cartState !== 'any') {
+        cartStateBars.push(bar);
+        if (!checkCartState(bar, cart)) {
+          bar.classList.add('ap-hidden');
+          return;
+        }
+      }
+
+      // Apply delay if set
+      applyDelay(bar, function () {
+        setupCloseButton(bar);
+
+        var settings = readSettings(bar);
+        if (settings.type === 'shipping_goal') {
+          shippingBars.push(bar);
+        } else if (settings.type === 'topbar') {
+          setupRotatingMessages(bar);
+        }
+
+        bar.setAttribute('data-ap-ready', 'true');
+        trackView(bar);
+      });
     });
 
-    // If there are shipping bars, fetch cart and start listeners
-    if (shippingBars.length > 0) {
-      var cart = await fetchCart();
+    // If there are shipping bars or cart-state bars, set up cart listeners
+    if (shippingBars.length > 0 || cartStateBars.length > 0) {
       if (cart) {
         lastCartTotal = cart.total_price;
+        lastCartItemCount = cart.item_count;
         updateAllShippingBars(cart.total_price);
       }
+
+      // Override refreshCart to also update cart state bars
+      var origRefreshCart = refreshCart;
+      refreshCart = async function () {
+        var c = await fetchCart();
+        if (!c) return;
+
+        var total = c.total_price;
+        if (total !== lastCartTotal) {
+          lastCartTotal = total;
+          updateAllShippingBars(total);
+        }
+
+        if (c.item_count !== lastCartItemCount) {
+          lastCartItemCount = c.item_count;
+          updateCartStateBars(c);
+        }
+      };
 
       setupCartListeners();
       startPolling();

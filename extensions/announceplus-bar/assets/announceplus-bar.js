@@ -75,11 +75,107 @@
     return true;
   }
 
+  function matchUrlPattern(path, pattern) {
+    pattern = pattern.trim();
+    if (!pattern) return false;
+    if (pattern === path) return true;
+    // Wildcard: /collections/* matches /collections/anything
+    if (pattern.indexOf('*') !== -1) {
+      var regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
+      return regex.test(path);
+    }
+    return false;
+  }
+
+  function checkUrlTarget(bar) {
+    var targetUrls = bar.dataset.targetUrls || '';
+    var excludeUrls = bar.dataset.excludeUrls || '';
+    var path = window.location.pathname;
+
+    // Check excludes first — always block
+    if (excludeUrls) {
+      var excludes = excludeUrls.split(',');
+      for (var i = 0; i < excludes.length; i++) {
+        if (matchUrlPattern(path, excludes[i])) return false;
+      }
+    }
+
+    // If includes are set, path must match at least one
+    if (targetUrls) {
+      var includes = targetUrls.split(',');
+      var matched = false;
+      for (var j = 0; j < includes.length; j++) {
+        if (matchUrlPattern(path, includes[j])) { matched = true; break; }
+      }
+      if (!matched) return false;
+    }
+
+    return true;
+  }
+
+  function checkCustomerStatus(bar) {
+    var status = bar.dataset.customerStatus || 'any';
+    if (status === 'any') return true;
+    var loggedIn = bar.dataset.customerLoggedIn === 'true';
+    if (status === 'logged_in') return loggedIn;
+    if (status === 'guest') return !loggedIn;
+    return true;
+  }
+
+  function checkCartValue(bar, cart) {
+    var min = parseFloat(bar.dataset.cartValueMin) || 0;
+    var max = parseFloat(bar.dataset.cartValueMax) || 0;
+    if (min === 0 && max === 0) return true;
+    if (!cart) return min === 0;
+
+    var cartDollars = cart.total_price / 100;
+    if (min > 0 && cartDollars < min) return false;
+    if (max > 0 && cartDollars > max) return false;
+    return true;
+  }
+
+  function checkCartItemCount(bar, cart) {
+    var min = parseInt(bar.dataset.cartItemMin, 10) || 0;
+    var max = parseInt(bar.dataset.cartItemMax, 10) || 0;
+    if (min === 0 && max === 0) return true;
+    if (!cart) return min === 0;
+
+    if (min > 0 && cart.item_count < min) return false;
+    if (max > 0 && cart.item_count > max) return false;
+    return true;
+  }
+
   function shouldShowBar(bar) {
     if (!checkPageTarget(bar)) return false;
     if (!checkVisitorTarget(bar)) return false;
     if (!checkDeviceTarget(bar)) return false;
+    if (!checkUrlTarget(bar)) return false;
+    if (!checkCustomerStatus(bar)) return false;
     return true;
+  }
+
+  function setupScrollTrigger(bar, callback) {
+    var trigger = parseInt(bar.dataset.scrollTrigger, 10) || 0;
+    if (trigger <= 0) { callback(); return; }
+
+    bar.style.display = 'none';
+    var fired = false;
+
+    function onScroll() {
+      if (fired) return;
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      if (docHeight <= 0) return;
+      var pct = (scrollTop / docHeight) * 100;
+      if (pct >= trigger) {
+        fired = true;
+        bar.style.display = '';
+        callback();
+        window.removeEventListener('scroll', onScroll);
+      }
+    }
+
+    window.addEventListener('scroll', onScroll, { passive: true });
   }
 
   function applyDelay(bar, callback) {
@@ -347,7 +443,8 @@
 
   function updateCartStateBars(cart) {
     cartStateBars.forEach(function (bar) {
-      if (checkCartState(bar, cart)) {
+      var show = checkCartState(bar, cart) && checkCartValue(bar, cart) && checkCartItemCount(bar, cart);
+      if (show) {
         bar.classList.remove('ap-hidden');
       } else {
         bar.classList.add('ap-hidden');
@@ -377,18 +474,26 @@
         return;
       }
 
-      // Check cart state targeting
+      // Check cart-based targeting (state, value, item count)
+      var needsCartWatch = false;
       var cartState = bar.dataset.cartState || 'any';
-      if (cartState !== 'any') {
+      var hasValueRule = (parseFloat(bar.dataset.cartValueMin) || 0) > 0 || (parseFloat(bar.dataset.cartValueMax) || 0) > 0;
+      var hasItemRule = (parseInt(bar.dataset.cartItemMin, 10) || 0) > 0 || (parseInt(bar.dataset.cartItemMax, 10) || 0) > 0;
+
+      if (cartState !== 'any' || hasValueRule || hasItemRule) {
+        needsCartWatch = true;
         cartStateBars.push(bar);
-        if (!checkCartState(bar, cart)) {
+        if (!checkCartState(bar, cart) || !checkCartValue(bar, cart) || !checkCartItemCount(bar, cart)) {
           bar.classList.add('ap-hidden');
           return;
         }
       }
 
-      // Apply delay if set
-      applyDelay(bar, function () {
+      // Apply scroll trigger, then delay, then show
+      var scrollTrigger = parseInt(bar.dataset.scrollTrigger, 10) || 0;
+
+      var showBar = function () {
+        applyDelay(bar, function () {
         setupCloseButton(bar);
 
         var settings = readSettings(bar);
@@ -400,7 +505,14 @@
 
         bar.setAttribute('data-ap-ready', 'true');
         trackView(bar);
-      });
+        });
+      };
+
+      if (scrollTrigger > 0) {
+        setupScrollTrigger(bar, showBar);
+      } else {
+        showBar();
+      }
     });
 
     // If there are shipping bars or cart-state bars, set up cart listeners

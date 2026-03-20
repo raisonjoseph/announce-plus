@@ -129,6 +129,14 @@ export const action = async ({ request, params }) => {
     deviceTarget: formData.get("deviceTarget") || "all",
     delaySeconds: parseInt(formData.get("delaySeconds"), 10) || 0,
     cartState: formData.get("cartState") || "any",
+    targetUrls: formData.get("targetUrls") || "",
+    excludeUrls: formData.get("excludeUrls") || "",
+    cartValueMin: parseFloat(formData.get("cartValueMin")) || 0,
+    cartValueMax: parseFloat(formData.get("cartValueMax")) || 0,
+    cartItemMin: parseInt(formData.get("cartItemMin"), 10) || 0,
+    cartItemMax: parseInt(formData.get("cartItemMax"), 10) || 0,
+    scrollTrigger: parseInt(formData.get("scrollTrigger"), 10) || 0,
+    customerStatus: formData.get("customerStatus") || "any",
     announcementSubtype: formData.get("announcementSubtype") || "simple",
   };
 
@@ -416,6 +424,31 @@ export default function AnnouncementEditorPage() {
   const [cartState, setCartState] = useState(
     saved.cartState || "any",
   );
+  // Starter targeting
+  const [targetUrls, setTargetUrls] = useState(
+    saved.targetUrls || "",
+  );
+  const [excludeUrls, setExcludeUrls] = useState(
+    saved.excludeUrls || "",
+  );
+  const [cartValueMin, setCartValueMin] = useState(
+    (saved.cartValueMin || "").toString(),
+  );
+  const [cartValueMax, setCartValueMax] = useState(
+    (saved.cartValueMax || "").toString(),
+  );
+  const [cartItemMin, setCartItemMin] = useState(
+    (saved.cartItemMin || "").toString(),
+  );
+  const [cartItemMax, setCartItemMax] = useState(
+    (saved.cartItemMax || "").toString(),
+  );
+  const [scrollTrigger, setScrollTrigger] = useState(
+    (saved.scrollTrigger || 0).toString(),
+  );
+  const [customerStatus, setCustomerStatus] = useState(
+    saved.customerStatus || "any",
+  );
   const [showPercentage, setShowPercentage] = useState(
     saved.showPercentage ?? false,
   );
@@ -453,6 +486,14 @@ export default function AnnouncementEditorPage() {
     formData.set("deviceTarget", deviceTarget);
     formData.set("delaySeconds", delaySeconds);
     formData.set("cartState", cartState);
+    formData.set("targetUrls", targetUrls);
+    formData.set("excludeUrls", excludeUrls);
+    formData.set("cartValueMin", cartValueMin);
+    formData.set("cartValueMax", cartValueMax);
+    formData.set("cartItemMin", cartItemMin);
+    formData.set("cartItemMax", cartItemMax);
+    formData.set("scrollTrigger", scrollTrigger);
+    formData.set("customerStatus", customerStatus);
     formData.set("announcementSubtype", announcementSubtype);
 
     if (type === "topbar") {
@@ -476,6 +517,8 @@ export default function AnnouncementEditorPage() {
     type, name, pages, position, isEnabled, backgroundColor, textColor,
     barHeight, isSticky, showCloseButton, fontSize, fontWeight, textAlign,
     showTo, deviceTarget, delaySeconds, cartState,
+    targetUrls, excludeUrls, cartValueMin, cartValueMax,
+    cartItemMin, cartItemMax, scrollTrigger, customerStatus,
     announcementSubtype, message, showCta, ctaText, ctaUrl,
     rotatingMessages, rotationSpeed, rotationAnimation,
     threshold, currencySymbol, barMessage, successMessage, barColor,
@@ -1025,6 +1068,140 @@ export default function AnnouncementEditorPage() {
                         helpText="0 = show immediately"
                         autoComplete="off"
                         suffix="sec"
+                      />
+                    </BlockStack>
+
+                    <Divider />
+
+                    <BlockStack gap="300">
+                      <InlineStack gap="200" blockAlign="center">
+                        <Text variant="headingSm" as="h3">
+                          URL targeting
+                        </Text>
+                        <Badge>Starter</Badge>
+                      </InlineStack>
+                      <TextField
+                        label="Show only on these URLs"
+                        value={targetUrls}
+                        onChange={setTargetUrls}
+                        helpText="Comma-separated paths. Use * as wildcard. e.g. /collections/sale, /pages/*"
+                        autoComplete="off"
+                        placeholder="/collections/sale, /products/*"
+                        multiline={2}
+                      />
+                      <TextField
+                        label="Hide on these URLs"
+                        value={excludeUrls}
+                        onChange={setExcludeUrls}
+                        helpText="Bar won't show on these pages even if other rules match"
+                        autoComplete="off"
+                        placeholder="/pages/about, /policies/*"
+                        multiline={2}
+                      />
+                    </BlockStack>
+
+                    <Divider />
+
+                    <BlockStack gap="300">
+                      <InlineStack gap="200" blockAlign="center">
+                        <Text variant="headingSm" as="h3">
+                          Customer status
+                        </Text>
+                        <Badge>Starter</Badge>
+                      </InlineStack>
+                      <Select
+                        label="Show to"
+                        options={[
+                          { label: "Everyone", value: "any" },
+                          { label: "Logged-in customers only", value: "logged_in" },
+                          { label: "Guests only", value: "guest" },
+                        ]}
+                        value={customerStatus}
+                        onChange={setCustomerStatus}
+                      />
+                    </BlockStack>
+
+                    <Divider />
+
+                    <BlockStack gap="300">
+                      <InlineStack gap="200" blockAlign="center">
+                        <Text variant="headingSm" as="h3">
+                          Cart value
+                        </Text>
+                        <Badge>Starter</Badge>
+                      </InlineStack>
+                      <FormLayout>
+                        <FormLayout.Group>
+                          <TextField
+                            label="Minimum cart value ($)"
+                            type="number"
+                            value={cartValueMin}
+                            onChange={setCartValueMin}
+                            helpText="0 = no minimum"
+                            autoComplete="off"
+                            prefix="$"
+                          />
+                          <TextField
+                            label="Maximum cart value ($)"
+                            type="number"
+                            value={cartValueMax}
+                            onChange={setCartValueMax}
+                            helpText="0 = no maximum"
+                            autoComplete="off"
+                            prefix="$"
+                          />
+                        </FormLayout.Group>
+                      </FormLayout>
+                    </BlockStack>
+
+                    <Divider />
+
+                    <BlockStack gap="300">
+                      <InlineStack gap="200" blockAlign="center">
+                        <Text variant="headingSm" as="h3">
+                          Cart items
+                        </Text>
+                        <Badge>Starter</Badge>
+                      </InlineStack>
+                      <FormLayout>
+                        <FormLayout.Group>
+                          <TextField
+                            label="Min items in cart"
+                            type="number"
+                            value={cartItemMin}
+                            onChange={setCartItemMin}
+                            helpText="0 = no minimum"
+                            autoComplete="off"
+                          />
+                          <TextField
+                            label="Max items in cart"
+                            type="number"
+                            value={cartItemMax}
+                            onChange={setCartItemMax}
+                            helpText="0 = no maximum"
+                            autoComplete="off"
+                          />
+                        </FormLayout.Group>
+                      </FormLayout>
+                    </BlockStack>
+
+                    <Divider />
+
+                    <BlockStack gap="300">
+                      <InlineStack gap="200" blockAlign="center">
+                        <Text variant="headingSm" as="h3">
+                          Scroll trigger
+                        </Text>
+                        <Badge>Starter</Badge>
+                      </InlineStack>
+                      <TextField
+                        label="Show after scrolling (%)"
+                        type="number"
+                        value={scrollTrigger}
+                        onChange={setScrollTrigger}
+                        helpText="0 = show immediately. 50 = show after scrolling halfway."
+                        autoComplete="off"
+                        suffix="%"
                       />
                     </BlockStack>
 

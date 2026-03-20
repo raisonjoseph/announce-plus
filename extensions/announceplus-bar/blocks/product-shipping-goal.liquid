@@ -1,0 +1,85 @@
+{%- assign ap_bars = shop.metafields.announceplus.bars -%}
+
+{%- if ap_bars != blank and ap_bars.value != blank -%}
+  {%- for bar in ap_bars.value -%}
+    {%- if bar.type == 'product_shipping_goal' and bar.isEnabled and bar.status == 'published' -%}
+
+      {%- comment -%} Product targeting {%- endcomment -%}
+      {%- assign show_bar = false -%}
+      {%- if bar.productTarget == blank or bar.productTarget == 'all' -%}
+        {%- assign show_bar = true -%}
+      {%- elsif bar.productTarget == 'specific_products' and bar.targetProductHandles != blank -%}
+        {%- assign target_handles = bar.targetProductHandles | split: ',' -%}
+        {%- for handle in target_handles -%}
+          {%- assign trimmed = handle | strip -%}
+          {%- if product.handle == trimmed -%}
+            {%- assign show_bar = true -%}
+          {%- endif -%}
+        {%- endfor -%}
+      {%- elsif bar.productTarget == 'specific_collections' and bar.targetCollectionHandles != blank -%}
+        {%- assign target_cols = bar.targetCollectionHandles | split: ',' -%}
+        {%- for col_handle in target_cols -%}
+          {%- assign trimmed_col = col_handle | strip -%}
+          {%- for col in product.collections -%}
+            {%- if col.handle == trimmed_col -%}
+              {%- assign show_bar = true -%}
+            {%- endif -%}
+          {%- endfor -%}
+        {%- endfor -%}
+      {%- endif -%}
+
+      {%- if show_bar -%}
+        <link rel="stylesheet" href="{{ 'announceplus-bar.css' | asset_url }}" />
+
+        <div
+          class="announceplus-product-goal"
+          data-type="product_shipping_goal"
+          data-threshold="{{ bar.thresholdCents | default: 5000 }}"
+          data-message="{{ bar.barMessage | escape }}"
+          data-success="{{ bar.successMessage | escape }}"
+          data-empty-message="{{ bar.emptyMessage | escape }}"
+          data-currency="{{ bar.currencySymbol | escape }}"
+          data-bar-id="{{ bar.id }}"
+          data-app-url="{{ shop.metafields.announceplus.app_url.value | default: '' }}"
+          style="
+            background-color: {{ bar.backgroundColor | default: '#f8fafc' }};
+            color: {{ bar.textColor | default: '#1e293b' }};
+            --ap-bar-color: {{ bar.barColor | default: '#22c55e' }};
+            --ap-text-color: {{ bar.textColor | default: '#1e293b' }};
+            --ap-font-size: {% case bar.fontSize %}{% when 'small' %}12px{% when 'large' %}16px{% else %}14px{% endcase %};
+            --ap-font-weight: {% case bar.fontWeight %}{% when 'medium' %}500{% when 'bold' %}700{% else %}400{% endcase %};
+          "
+        >
+          <p class="ap-product-goal-text">
+            {%- if bar.emptyMessage != blank -%}
+              {{ bar.emptyMessage | replace: '{order-value}', bar.threshold | default: '$50' }}
+            {%- else -%}
+              Loading...
+            {%- endif -%}
+          </p>
+          <div class="ap-product-goal-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div class="ap-product-goal-fill"></div>
+          </div>
+        </div>
+
+        <script src="{{ 'announceplus-bar.js' | asset_url }}" defer="defer"></script>
+      {%- endif -%}
+    {%- endif -%}
+  {%- endfor -%}
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Product Shipping Goal",
+  "target": "section",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "is_enabled",
+      "label": "Enable Product Shipping Goal",
+      "default": true,
+      "info": "Place this block below the Add to Cart button. Configure in the AnnouncePlus app."
+    }
+  ]
+}
+{% endschema %}

@@ -4,6 +4,10 @@
 (function () {
   'use strict';
 
+  // Prevent double initialization if JS is loaded by multiple blocks
+  if (window.__apInitialized) return;
+  window.__apInitialized = true;
+
   var STORAGE_PREFIX = 'ap_bar_closed_';
   var POLL_INTERVAL = 3000;
   var DEFAULT_THRESHOLD = 5000;
@@ -401,9 +405,55 @@
     }
   }
 
+  function updateProductGoal(el, cartTotal) {
+    var settings = readSettings(el);
+    var threshold = settings.threshold;
+    var remaining = Math.max(threshold - cartTotal, 0);
+    var percentage = Math.min((cartTotal / threshold) * 100, 100);
+
+    var textEl = el.querySelector('.ap-product-goal-text');
+    var fillEl = el.querySelector('.ap-product-goal-fill');
+    var trackEl = el.querySelector('.ap-product-goal-track');
+
+    if (!textEl || !fillEl || !trackEl) return;
+
+    if (cartTotal === 0 && settings.emptyMessage) {
+      var thresholdFormatted = formatAmount(threshold, settings.currency);
+      textEl.textContent = settings.emptyMessage.replace('{order-value}', thresholdFormatted);
+      trackEl.classList.add('ap-track-hidden');
+      el.classList.remove('ap-success', 'ap-progress');
+      el.classList.add('ap-info');
+      return;
+    }
+
+    el.classList.remove('ap-info');
+
+    if (remaining === 0) {
+      textEl.textContent = settings.success;
+      fillEl.style.width = '100%';
+      trackEl.classList.add('ap-track-hidden');
+      el.classList.add('ap-success');
+      el.classList.remove('ap-progress');
+    } else {
+      var formattedAmount = formatAmount(remaining, settings.currency);
+      var msg = settings.message.replace('{amount}', formattedAmount);
+      textEl.textContent = msg;
+      fillEl.style.width = percentage.toFixed(1) + '%';
+      trackEl.setAttribute('aria-valuenow', Math.round(percentage));
+      trackEl.classList.remove('ap-track-hidden');
+      el.classList.remove('ap-success');
+      el.classList.add('ap-progress');
+    }
+  }
+
+  var productGoals = [];
+
   function updateAllShippingBars(cartTotal) {
     shippingBars.forEach(function (bar) {
       updateShippingBar(bar, cartTotal);
+    });
+    productGoals.forEach(function (el) {
+      updateProductGoal(el, cartTotal);
     });
   }
 
@@ -633,9 +683,11 @@
 
   async function init() {
     var bars = document.querySelectorAll('.announceplus-bar');
-    if (!bars.length) return;
+    var pGoals = document.querySelectorAll('.announceplus-product-goal');
 
-    console.log('[AnnouncePlus] Found', bars.length, 'bar(s). Initialising...');
+    if (!bars.length && !pGoals.length) return;
+
+    console.log('[AnnouncePlus] Found', bars.length, 'bar(s) and', pGoals.length, 'product goal(s). Initialising...');
 
     // Fetch cart upfront for cart-based targeting
     var cart = await fetchCart();
@@ -703,8 +755,14 @@
       }
     });
 
-    // If there are shipping bars or cart-state bars, set up cart listeners
-    if (shippingBars.length > 0 || cartStateBars.length > 0) {
+    // Register product goal elements
+    pGoals.forEach(function (el) {
+      productGoals.push(el);
+      el.setAttribute('data-ap-ready', 'true');
+    });
+
+    // If there are shipping bars, product goals, or cart-state bars, set up cart listeners
+    if (shippingBars.length > 0 || productGoals.length > 0 || cartStateBars.length > 0) {
       if (cart) {
         lastCartTotal = cart.total_price;
         lastCartItemCount = cart.item_count;

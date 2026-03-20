@@ -49,6 +49,20 @@ const SHIPPING_DEFAULTS = {
   showCloseButton: false,
 };
 
+const PRODUCT_GOAL_DEFAULTS = {
+  threshold: "50",
+  currencySymbol: "$",
+  barMessage: "Spend {amount} more for free shipping!",
+  successMessage: "You've unlocked free shipping!",
+  emptyMessage: "Free shipping for orders over {order-value}!",
+  barColor: "#22c55e",
+  backgroundColor: "#f8fafc",
+  textColor: "#1e293b",
+  productTarget: "all",
+  targetProductHandles: "",
+  targetCollectionHandles: "",
+};
+
 // ─── Loader & Action (unchanged) ────────────────────
 
 export const loader = async ({ request, params }) => {
@@ -169,6 +183,23 @@ export const action = async ({ request, params }) => {
       rotationSpeed: parseInt(formData.get("rotationSpeed"), 10) || 15,
       rotationAnimation: formData.get("rotationAnimation") || "fade",
       marqueeDirection: formData.get("marqueeDirection") || "ltr",
+    };
+  } else if (type === "product_shipping_goal") {
+    const threshold = parseFloat(formData.get("threshold")) || 50;
+    settings = {
+      ...sharedDesign,
+      threshold,
+      thresholdCents: Math.round(threshold * 100),
+      currencySymbol: formData.get("currencySymbol") || "$",
+      barMessage:
+        formData.get("barMessage") || "Spend {amount} more for free shipping!",
+      successMessage:
+        formData.get("successMessage") || "You've unlocked free shipping!",
+      emptyMessage: formData.get("emptyMessage") || "Free shipping for orders over {order-value}!",
+      barColor: formData.get("barColor") || "#22c55e",
+      productTarget: formData.get("productTarget") || "all",
+      targetProductHandles: formData.get("targetProductHandles") || "",
+      targetCollectionHandles: formData.get("targetCollectionHandles") || "",
     };
   } else {
     const threshold = parseFloat(formData.get("threshold")) || 50;
@@ -438,7 +469,17 @@ export default function AnnouncementEditorPage() {
     saved.successMessage || SHIPPING_DEFAULTS.successMessage,
   );
   const [emptyMessage, setEmptyMessage] = useState(
-    saved.emptyMessage || "Free shipping for orders over {order-value}!",
+    saved.emptyMessage || (type === "product_shipping_goal" ? PRODUCT_GOAL_DEFAULTS.emptyMessage : "Free shipping for orders over {order-value}!"),
+  );
+  // Product goal targeting
+  const [productTarget, setProductTarget] = useState(
+    saved.productTarget || "all",
+  );
+  const [targetProductHandles, setTargetProductHandles] = useState(
+    saved.targetProductHandles || "",
+  );
+  const [targetCollectionHandles, setTargetCollectionHandles] = useState(
+    saved.targetCollectionHandles || "",
   );
 
   // ─── Design tab state ───
@@ -600,6 +641,11 @@ export default function AnnouncementEditorPage() {
       formData.set("barMessage", barMessage);
       formData.set("successMessage", successMessage);
       formData.set("emptyMessage", emptyMessage);
+      if (type === "product_shipping_goal") {
+        formData.set("productTarget", productTarget);
+        formData.set("targetProductHandles", targetProductHandles);
+        formData.set("targetCollectionHandles", targetCollectionHandles);
+      }
       formData.set("barColor", barColor);
       formData.set("showPercentage", showPercentage.toString());
     }
@@ -615,7 +661,8 @@ export default function AnnouncementEditorPage() {
     exitIntent, utmSource, utmMedium, utmCampaign, minPageViews,
     announcementSubtype, message, showCta, ctaText, ctaUrl,
     rotatingMessages, rotationSpeed, rotationAnimation, marqueeDirection,
-    threshold, currencySymbol, barMessage, successMessage, emptyMessage, barColor,
+    threshold, currencySymbol, barMessage, successMessage, emptyMessage,
+    productTarget, targetProductHandles, targetCollectionHandles, barColor,
     showPercentage, submit,
   ]);
 
@@ -629,7 +676,9 @@ export default function AnnouncementEditorPage() {
   const pageTitle = isNew
     ? type === "topbar"
       ? "New Top/Bottom Bar"
-      : "New Free Shipping Goal"
+      : type === "product_shipping_goal"
+        ? "New Product Shipping Goal"
+        : "New Free Shipping Goal"
     : `Edit: ${announcement?.name || ""}`;
 
   // ─── Rotating preview index ───
@@ -972,7 +1021,7 @@ export default function AnnouncementEditorPage() {
                       </>
                     )}
 
-                    {type === "shipping_goal" && (
+                    {(type === "shipping_goal" || type === "product_shipping_goal") && (
                       <>
                         <BlockStack gap="300">
                           <Text variant="headingSm" as="h3">
@@ -1004,6 +1053,14 @@ export default function AnnouncementEditorPage() {
                           </Text>
                           <FormLayout>
                             <TextField
+                              label="Empty cart message"
+                              value={emptyMessage}
+                              onChange={setEmptyMessage}
+                              helpText="Shown before customer adds products. Use {order-value} for the threshold. Leave empty to show progress bar immediately."
+                              autoComplete="off"
+                              placeholder="Free shipping for orders over {order-value}!"
+                            />
+                            <TextField
                               label="Progress message"
                               value={barMessage}
                               onChange={setBarMessage}
@@ -1016,16 +1073,49 @@ export default function AnnouncementEditorPage() {
                               onChange={setSuccessMessage}
                               autoComplete="off"
                             />
-                            <TextField
-                              label="Empty cart message"
-                              value={emptyMessage}
-                              onChange={setEmptyMessage}
-                              helpText="Shown before customer adds products. Use {order-value} for the threshold. Leave empty to show progress bar immediately."
-                              autoComplete="off"
-                              placeholder="Free shipping for orders over {order-value}!"
-                            />
                           </FormLayout>
                         </BlockStack>
+                        {type === "product_shipping_goal" && (
+                          <>
+                            <Divider />
+                            <BlockStack gap="300">
+                              <Text variant="headingSm" as="h3">
+                                Product targeting
+                              </Text>
+                              <ChoiceList
+                                choices={[
+                                  { label: "All products", value: "all" },
+                                  { label: "Specific products", value: "specific_products" },
+                                  { label: "Specific collections", value: "specific_collections" },
+                                ]}
+                                selected={[productTarget]}
+                                onChange={(v) => setProductTarget(v[0])}
+                              />
+                              {productTarget === "specific_products" && (
+                                <TextField
+                                  label="Product handles"
+                                  value={targetProductHandles}
+                                  onChange={setTargetProductHandles}
+                                  helpText="Comma-separated product handles from your store URL. e.g. blue-tshirt, red-hoodie"
+                                  autoComplete="off"
+                                  multiline={2}
+                                  placeholder="blue-tshirt, red-hoodie"
+                                />
+                              )}
+                              {productTarget === "specific_collections" && (
+                                <TextField
+                                  label="Collection handles"
+                                  value={targetCollectionHandles}
+                                  onChange={setTargetCollectionHandles}
+                                  helpText="Comma-separated collection handles. e.g. summer-sale, new-arrivals"
+                                  autoComplete="off"
+                                  multiline={2}
+                                  placeholder="summer-sale, new-arrivals"
+                                />
+                              )}
+                            </BlockStack>
+                          </>
+                        )}
                       </>
                     )}
                   </BlockStack>
@@ -1051,7 +1141,7 @@ export default function AnnouncementEditorPage() {
                             onChange={setTextColor}
                           />
                         </FormLayout.Group>
-                        {type === "shipping_goal" && (
+                        {(type === "shipping_goal" || type === "product_shipping_goal") && (
                           <ColorField
                             label="Progress bar color"
                             value={barColor}
@@ -1539,7 +1629,7 @@ export default function AnnouncementEditorPage() {
                     </BlockStack>
                     </LockedSection>
 
-                    {type === "shipping_goal" && (
+                    {(type === "shipping_goal" || type === "product_shipping_goal") && (
                       <>
                         <Divider />
                         <BlockStack gap="300">
@@ -1780,7 +1870,7 @@ function PreviewBar({
           &#215;
         </span>
       )}
-      {type === "shipping_goal" && (
+      {(type === "shipping_goal" || type === "product_shipping_goal") && (
         <div
           style={{
             position: "absolute",

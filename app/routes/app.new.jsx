@@ -81,6 +81,58 @@ export default function NewAnnouncementPage() {
                 </Button>
               </BlockStack>
             </Card>
+
+            {/* Card 3: Product Shipping Goal */}
+            <Card>
+              <BlockStack gap="400">
+                <div
+                  style={{
+                    background: "#f8fafc",
+                    borderRadius: "8px",
+                    padding: "12px",
+                    border: "1px solid #e2e8f0",
+                  }}
+                >
+                  <div style={{ fontSize: "13px", color: "#1e293b", textAlign: "center", marginBottom: "6px" }}>
+                    Free shipping for orders over $50!
+                  </div>
+                  <div
+                    style={{
+                      height: "4px",
+                      background: "#e2e8f0",
+                      borderRadius: "999px",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        height: "100%",
+                        width: "40%",
+                        background: "#22c55e",
+                        borderRadius: "999px",
+                      }}
+                    />
+                  </div>
+                </div>
+                <BlockStack gap="100">
+                  <Text variant="headingMd" as="h3">
+                    Product shipping goal
+                  </Text>
+                  <Text tone="subdued" as="p">
+                    Inline progress bar below the Add to Cart button on
+                    product pages. Target specific products or collections.
+                  </Text>
+                </BlockStack>
+                <Button
+                  fullWidth
+                  onClick={() =>
+                    navigate("/app/announcement/new?type=product_shipping_goal")
+                  }
+                >
+                  Select
+                </Button>
+              </BlockStack>
+            </Card>
           </div>
         </Layout.Section>
       </Layout>

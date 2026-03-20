@@ -675,7 +675,9 @@ export default function DashboardPage() {
                     <IndexTable.Cell>
                       {ann.type === "topbar"
                         ? "Simple"
-                        : "Free shipping goal"}
+                        : ann.type === "product_shipping_goal"
+                          ? "Product goal"
+                          : "Free shipping goal"}
                     </IndexTable.Cell>
                     <IndexTable.Cell>
                       {placementLabels[ann.placement] || ann.placement}

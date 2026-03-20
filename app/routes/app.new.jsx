@@ -27,8 +27,8 @@ export default function NewAnnouncementPage() {
           <div
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, 320px)",
-              gap: "16px",
+              gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+              gap: "12px",
             }}
           >
             {/* Card 1: Top/Bottom bar */}

@@ -150,46 +150,57 @@
   position: relative;
 }
 
-.announceplus-bar.ap-running .ap-bar-text {
-  display: inline-block;
+.ap-marquee-track {
+  display: flex;
   white-space: nowrap;
   will-change: transform;
-  transform: translateX(calc(100vw + 40px));
 }
 
-.announceplus-bar.ap-running.ap-marquee-ready .ap-bar-text {
+.ap-marquee-item {
+  flex-shrink: 0;
+  padding: 0 4px;
+  color: var(--ap-text-color);
+  font-size: var(--ap-font-size, 14px);
+  font-weight: var(--ap-font-weight, 500);
+}
+
+/* LTR: track slides left so text appears to move right-to-left visually */
+.announceplus-bar.ap-running.ap-marquee-ready .ap-marquee-track {
   animation: ap-marquee-ltr var(--ap-marquee-speed, 15s) linear infinite;
 }
 
-/* Left to right (default) */
 @keyframes ap-marquee-ltr {
-  0%   { transform: translateX(calc(-100% - 40px)); }
-  100% { transform: translateX(calc(100vw + 40px)); }
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
 }
 
-/* Right to left */
-.announceplus-bar.ap-running.ap-rtl .ap-bar-text {
-  transform: translateX(calc(-100% - 40px));
-}
-
-.announceplus-bar.ap-running.ap-rtl.ap-marquee-ready .ap-bar-text {
-  animation-name: ap-marquee-rtl;
+/* RTL: track slides right so text appears to move left-to-right visually */
+.announceplus-bar.ap-running.ap-rtl.ap-marquee-ready .ap-marquee-track {
+  animation: ap-marquee-rtl var(--ap-marquee-speed, 15s) linear infinite;
 }
 
 @keyframes ap-marquee-rtl {
-  0%   { transform: translateX(calc(100vw + 40px)); }
-  100% { transform: translateX(calc(-100% - 40px)); }
+  0%   { transform: translateX(-50%); }
+  100% { transform: translateX(0); }
 }
 
-.announceplus-bar.ap-running:hover .ap-bar-text {
+.announceplus-bar.ap-running:hover .ap-marquee-track {
   animation-play-state: paused;
+}
+
+/* Hide old .ap-bar-text when marquee is active */
+.announceplus-bar.ap-running .ap-bar-text {
+  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .announceplus-bar.ap-running .ap-bar-text {
-    animation: none;
+    display: block;
     text-align: center;
     width: 100%;
+  }
+  .announceplus-bar.ap-running .ap-marquee-track {
+    display: none;
   }
 }
 

@@ -479,6 +479,30 @@
     if (direction === 'rtl') {
       bar.classList.add('ap-rtl');
     }
+
+    // Duplicate text for seamless loop
+    var textEl = bar.querySelector('.ap-bar-text');
+    if (textEl) {
+      var inner = bar.querySelector('.ap-bar-inner');
+      if (inner) {
+        var separator = '\u00A0\u00A0\u00A0\u2022\u00A0\u00A0\u00A0';
+        var original = textEl.textContent;
+        // Create a track with duplicated text
+        inner.innerHTML = '';
+        var track = document.createElement('div');
+        track.className = 'ap-marquee-track';
+        var span1 = document.createElement('span');
+        span1.className = 'ap-marquee-item';
+        span1.textContent = original + separator;
+        var span2 = document.createElement('span');
+        span2.className = 'ap-marquee-item';
+        span2.textContent = original + separator;
+        track.appendChild(span1);
+        track.appendChild(span2);
+        inner.appendChild(track);
+      }
+    }
+
     // Wait one frame so the off-screen position renders first, then start animation
     requestAnimationFrame(function () {
       requestAnimationFrame(function () {

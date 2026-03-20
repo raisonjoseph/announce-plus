@@ -480,34 +480,42 @@
       bar.classList.add('ap-rtl');
     }
 
-    // Duplicate text for seamless loop
     var textEl = bar.querySelector('.ap-bar-text');
-    if (textEl) {
-      var inner = bar.querySelector('.ap-bar-inner');
-      if (inner) {
-        var separator = '\u00A0\u00A0\u00A0\u2022\u00A0\u00A0\u00A0';
-        var original = textEl.textContent;
-        // Create a track with duplicated text
-        inner.innerHTML = '';
-        var track = document.createElement('div');
-        track.className = 'ap-marquee-track';
-        var span1 = document.createElement('span');
-        span1.className = 'ap-marquee-item';
-        span1.textContent = original + separator;
-        var span2 = document.createElement('span');
-        span2.className = 'ap-marquee-item';
-        span2.textContent = original + separator;
-        track.appendChild(span1);
-        track.appendChild(span2);
-        inner.appendChild(track);
-      }
+    var inner = bar.querySelector('.ap-bar-inner');
+    if (!textEl || !inner) return;
+
+    var original = textEl.textContent.trim();
+    inner.innerHTML = '';
+
+    // Create track
+    var track = document.createElement('div');
+    track.className = 'ap-marquee-track';
+
+    // Measure one copy to know how many we need
+    var measure = document.createElement('span');
+    measure.className = 'ap-marquee-item';
+    measure.textContent = original;
+    measure.style.visibility = 'hidden';
+    measure.style.position = 'absolute';
+    inner.appendChild(measure);
+    var itemWidth = measure.offsetWidth + 80; // 80 = 40px padding each side
+    inner.removeChild(measure);
+
+    // Need enough copies so total width >= 2x viewport
+    var copies = Math.max(4, Math.ceil((window.innerWidth * 2) / itemWidth) + 2);
+
+    for (var i = 0; i < copies; i++) {
+      var span = document.createElement('span');
+      span.className = 'ap-marquee-item';
+      span.textContent = original;
+      track.appendChild(span);
     }
 
-    // Wait one frame so the off-screen position renders first, then start animation
+    inner.appendChild(track);
+
+    // Start animation after layout
     requestAnimationFrame(function () {
-      requestAnimationFrame(function () {
-        bar.classList.add('ap-marquee-ready');
-      });
+      bar.classList.add('ap-marquee-ready');
     });
   }
 

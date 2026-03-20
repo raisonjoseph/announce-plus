@@ -144,53 +144,45 @@
 
 .announceplus-bar.ap-running .ap-bar-inner {
   max-width: none;
-  flex-direction: row;
   overflow: hidden;
   width: 100%;
-  position: relative;
+}
+
+.announceplus-bar.ap-running .ap-bar-text {
+  display: none;
 }
 
 .ap-marquee-track {
-  display: flex;
+  display: inline-flex;
   white-space: nowrap;
   will-change: transform;
 }
 
 .ap-marquee-item {
   flex-shrink: 0;
-  padding: 0 4px;
+  display: inline-block;
+  padding: 0 40px;
   color: var(--ap-text-color);
   font-size: var(--ap-font-size, 14px);
   font-weight: var(--ap-font-weight, 500);
+  line-height: 1.4;
 }
 
-/* LTR: track slides left so text appears to move right-to-left visually */
 .announceplus-bar.ap-running.ap-marquee-ready .ap-marquee-track {
-  animation: ap-marquee-ltr var(--ap-marquee-speed, 15s) linear infinite;
+  animation: ap-scroll var(--ap-marquee-speed, 15s) linear infinite;
 }
 
-@keyframes ap-marquee-ltr {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
-
-/* RTL: track slides right so text appears to move left-to-right visually */
 .announceplus-bar.ap-running.ap-rtl.ap-marquee-ready .ap-marquee-track {
-  animation: ap-marquee-rtl var(--ap-marquee-speed, 15s) linear infinite;
+  animation-direction: reverse;
 }
 
-@keyframes ap-marquee-rtl {
-  0%   { transform: translateX(-50%); }
-  100% { transform: translateX(0); }
+@keyframes ap-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
 
 .announceplus-bar.ap-running:hover .ap-marquee-track {
   animation-play-state: paused;
-}
-
-/* Hide old .ap-bar-text when marquee is active */
-.announceplus-bar.ap-running .ap-bar-text {
-  display: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -199,9 +191,7 @@
     text-align: center;
     width: 100%;
   }
-  .announceplus-bar.ap-running .ap-marquee-track {
-    display: none;
-  }
+  .ap-marquee-track { display: none; }
 }
 
 @media (max-width: 768px) {

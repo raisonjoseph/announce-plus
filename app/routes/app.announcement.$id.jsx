@@ -26,7 +26,8 @@ import {
 } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
-import { canCreateBar } from "../plan.server";
+import { canCreateBar, getShopPlan } from "../plan.server";
+import { hasFeature } from "../plans";
 
 const TOPBAR_DEFAULTS = {
   message: "Welcome to our store!",
@@ -54,10 +55,12 @@ export const loader = async ({ request, params }) => {
   const { session } = await authenticate.admin(request);
   const shop = session.shop;
 
+  const shopPlan = await getShopPlan(shop);
+
   if (params.id === "new") {
     const url = new URL(request.url);
     const type = url.searchParams.get("type") || "topbar";
-    return json({ announcement: null, type, isNew: true });
+    return json({ announcement: null, type, isNew: true, shopPlan });
   }
 
   const announcement = await prisma.announcement.findFirst({
@@ -89,6 +92,7 @@ export const loader = async ({ request, params }) => {
     type: announcement.type,
     isNew: false,
     monthlyViews,
+    shopPlan,
   });
 };
 
@@ -333,10 +337,52 @@ function ColorField({ label, value, onChange }) {
   );
 }
 
+// ─── Locked Section Wrapper ─────────────────────────
+
+function LockedSection({ locked, planName, children }) {
+  if (!locked) return children;
+  return (
+    <div style={{ position: "relative" }}>
+      <div
+        style={{
+          opacity: 0.4,
+          pointerEvents: "none",
+          userSelect: "none",
+        }}
+      >
+        {children}
+      </div>
+      <div
+        style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0,
+          right: 0,
+          background: "rgba(255,255,255,0.85)",
+          borderRadius: 8,
+          padding: "8px 12px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <Text variant="bodySm" as="span" tone="subdued">
+          Upgrade to {planName} to unlock
+        </Text>
+        <Button size="slim" url="/app/pricing">
+          Upgrade
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Component ──────────────────────────────────────
 
 export default function AnnouncementEditorPage() {
-  const { announcement, type, isNew, monthlyViews } = useLoaderData();
+  const { announcement, type, isNew, monthlyViews, shopPlan } = useLoaderData();
+  const planId = shopPlan?.id || "free";
+  const can = (feature) => hasFeature(planId, feature);
   const navigate = useNavigate();
   const navigation = useNavigation();
   const submit = useSubmit();
@@ -1130,21 +1176,23 @@ export default function AnnouncementEditorPage() {
 
                     <Divider />
 
-                    <BlockStack gap="300">
-                      <Text variant="headingSm" as="h3">
-                        Device
-                      </Text>
-                      <Select
-                        label="Show on"
-                        options={[
-                          { label: "All devices", value: "all" },
-                          { label: "Desktop only", value: "desktop" },
-                          { label: "Mobile only", value: "mobile" },
-                        ]}
-                        value={deviceTarget}
-                        onChange={setDeviceTarget}
-                      />
-                    </BlockStack>
+                    <LockedSection locked={!can("deviceTargeting")} planName="Starter">
+                      <BlockStack gap="300">
+                        <Text variant="headingSm" as="h3">
+                          Device
+                        </Text>
+                        <Select
+                          label="Show on"
+                          options={[
+                            { label: "All devices", value: "all" },
+                            { label: "Desktop only", value: "desktop" },
+                            { label: "Mobile only", value: "mobile" },
+                          ]}
+                          value={deviceTarget}
+                          onChange={setDeviceTarget}
+                        />
+                      </BlockStack>
+                    </LockedSection>
 
                     <Divider />
 
@@ -1166,24 +1214,27 @@ export default function AnnouncementEditorPage() {
 
                     <Divider />
 
-                    <BlockStack gap="300">
-                      <Text variant="headingSm" as="h3">
-                        Display delay
-                      </Text>
-                      <TextField
-                        label="Show after (seconds)"
-                        type="number"
-                        value={delaySeconds}
-                        onChange={setDelaySeconds}
-                        helpText="0 = show immediately"
-                        autoComplete="off"
-                        suffix="sec"
-                      />
-                    </BlockStack>
+                    <LockedSection locked={!can("delayTrigger")} planName="Starter">
+                      <BlockStack gap="300">
+                        <Text variant="headingSm" as="h3">
+                          Display delay
+                        </Text>
+                        <TextField
+                          label="Show after (seconds)"
+                          type="number"
+                          value={delaySeconds}
+                          onChange={setDelaySeconds}
+                          helpText="0 = show immediately"
+                          autoComplete="off"
+                          suffix="sec"
+                        />
+                      </BlockStack>
+                    </LockedSection>
 
                     <Divider />
 
-                    <BlockStack gap="300">
+                    <LockedSection locked={!can("urlTargeting")} planName="Starter">
+                      <BlockStack gap="300">
                       <InlineStack gap="200" blockAlign="center">
                         <Text variant="headingSm" as="h3">
                           URL targeting
@@ -1209,9 +1260,11 @@ export default function AnnouncementEditorPage() {
                         multiline={2}
                       />
                     </BlockStack>
+                    </LockedSection>
 
                     <Divider />
 
+                    <LockedSection locked={!can("urlTargeting")} planName="Starter">
                     <BlockStack gap="300">
                       <InlineStack gap="200" blockAlign="center">
                         <Text variant="headingSm" as="h3">
@@ -1314,9 +1367,11 @@ export default function AnnouncementEditorPage() {
                         suffix="%"
                       />
                     </BlockStack>
+                    </LockedSection>
 
                     <Divider />
 
+                    <LockedSection locked={!can("scheduling")} planName="Pro">
                     <BlockStack gap="300">
                       <InlineStack gap="200" blockAlign="center">
                         <Text variant="headingSm" as="h3">
@@ -1469,6 +1524,7 @@ export default function AnnouncementEditorPage() {
                         autoComplete="off"
                       />
                     </BlockStack>
+                    </LockedSection>
 
                     {type === "shipping_goal" && (
                       <>

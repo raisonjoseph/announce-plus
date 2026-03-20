@@ -135,6 +135,40 @@
 .ap-bar-inner.ap-center { align-items: center; }
 .ap-bar-inner.ap-right  { align-items: flex-end; }
 
+/* Running line / marquee */
+.announceplus-bar.ap-running {
+  overflow: hidden;
+}
+
+.announceplus-bar.ap-running .ap-bar-inner {
+  max-width: none;
+  flex-direction: row;
+  overflow: hidden;
+  width: 100%;
+}
+
+.announceplus-bar.ap-running .ap-bar-text {
+  display: inline-block;
+  white-space: nowrap;
+  animation: ap-marquee var(--ap-marquee-speed, 20s) linear infinite;
+  padding-right: 80px;
+}
+
+@keyframes ap-marquee {
+  0%   { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+.announceplus-bar.ap-running:hover .ap-bar-text {
+  animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .announceplus-bar.ap-running .ap-bar-text {
+    animation: none;
+  }
+}
+
 @media (max-width: 768px) {
   .announceplus-bar {
     padding: 8px 36px 8px 16px;

@@ -44,7 +44,7 @@ const SHIPPING_DEFAULTS = {
   backgroundColor: "#1a1a1a",
   textColor: "#ffffff",
   showPercentage: false,
-  showCloseButton: true,
+  showCloseButton: false,
 };
 
 // ─── Loader & Action (unchanged) ────────────────────
@@ -406,7 +406,7 @@ export default function AnnouncementEditorPage() {
     saved.isSticky ?? true,
   );
   const [showCloseButton, setShowCloseButton] = useState(
-    saved.showCloseButton ?? true,
+    saved.showCloseButton ?? false,
   );
   const [fontSize, setFontSize] = useState(
     saved.fontSize || "medium",
@@ -686,7 +686,7 @@ export default function AnnouncementEditorPage() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 380px",
+          gridTemplateColumns: "1fr 480px",
           gap: "20px",
           alignItems: "start",
         }}
@@ -801,6 +801,29 @@ export default function AnnouncementEditorPage() {
                                 suffix="sec"
                               />
                             </FormLayout>
+                          </BlockStack>
+                        ) : announcementSubtype === "running" ? (
+                          <BlockStack gap="300">
+                            <Text variant="headingSm" as="h3">
+                              Running line
+                            </Text>
+                            <TextField
+                              label="Scrolling text"
+                              value={message}
+                              onChange={setMessage}
+                              multiline={2}
+                              helpText="This text scrolls continuously across the bar"
+                              autoComplete="off"
+                            />
+                            <TextField
+                              label="Scroll speed (seconds)"
+                              type="number"
+                              value={rotationSpeed}
+                              onChange={setRotationSpeed}
+                              helpText="Time for one full scroll. Lower = faster. Default: 15"
+                              autoComplete="off"
+                              suffix="sec"
+                            />
                           </BlockStack>
                         ) : (
                           <BlockStack gap="300">

@@ -471,6 +471,12 @@
     pollTimer = setInterval(refreshCart, POLL_INTERVAL);
   }
 
+  function setupRunningLine(bar) {
+    bar.classList.add('ap-running');
+    var speed = parseInt(bar.dataset.rotationSpeed, 10) || 15;
+    bar.style.setProperty('--ap-marquee-speed', speed + 's');
+  }
+
   function setupRotatingMessages(bar) {
     var messagesAttr = bar.dataset.rotatingMessages;
     if (!messagesAttr) return;
@@ -623,10 +629,16 @@
         setupCloseButton(bar);
 
         var settings = readSettings(bar);
+        var subtype = bar.dataset.subtype || 'simple';
+
         if (settings.type === 'shipping_goal') {
           shippingBars.push(bar);
         } else if (settings.type === 'topbar') {
-          setupRotatingMessages(bar);
+          if (subtype === 'running') {
+            setupRunningLine(bar);
+          } else if (subtype === 'rotating') {
+            setupRotatingMessages(bar);
+          }
         }
 
         bar.setAttribute('data-ap-ready', 'true');

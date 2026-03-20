@@ -24,6 +24,7 @@ export const meta = () => [
       "Show a live free shipping progress bar that updates as customers shop. Increase average order value with smart announcement bars.",
   },
   { property: "og:type", content: "website" },
+  { property: "og:image", content: "https://announce-plus.vercel.app/announceplus-icon.png" },
   { property: "og:site_name", content: "AnnouncePlus by Makerbase" },
   { name: "twitter:card", content: "summary_large_image" },
   { name: "twitter:title", content: "AnnouncePlus — Shopify Announcement Bar App" },
@@ -118,6 +119,8 @@ export const links = () => [
     href: "https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600;700;800&family=Nunito+Sans:wght@400;500;600;700&display=swap",
   },
   { rel: "canonical", href: "https://announceplus.makerbase.app" },
+  { rel: "icon", type: "image/png", href: "/announceplus-icon.png" },
+  { rel: "apple-touch-icon", href: "/announceplus-icon.png" },
 ];
 
 // ─── Loader ─────────────────────────────────────────
@@ -229,10 +232,6 @@ const S = {
     zIndex: 100,
   },
   logoCt: { display: "flex", alignItems: "center", gap: 10 },
-  logoBox: {
-    width: 36, height: 36, background: "#2563eb", borderRadius: 8,
-    display: "flex", alignItems: "center", justifyContent: "center",
-  },
   logoText: { fontFamily: font, fontSize: 18, fontWeight: 700, color: "#0f172a" },
   navRight: { display: "flex", alignItems: "center", gap: 16 },
   navBy: { fontSize: 13, color: "#94a3b8" },
@@ -542,14 +541,13 @@ export default function LandingPage() {
       {/* ── NAV ── */}
       <nav style={S.nav} aria-label="Main navigation">
         <div style={S.logoCt}>
-          <div style={S.logoBox} aria-hidden="true">
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <polygon points="5,7 5,13 8,11.5 8,8.5" fill="white" />
-              <polygon points="8,8.5 8,11.5 13,14 13,6" fill="white" />
-              <rect x="3.5" y="7" width="1.5" height="6" rx="0.75" fill="white" />
-              <path d="M14 8.5 Q16.5 10 14 11.5" stroke="white" strokeWidth="1.2" strokeLinecap="round" fill="none" />
-            </svg>
-          </div>
+          <img
+            src="/announceplus-icon.png"
+            alt="AnnouncePlus"
+            width={36}
+            height={36}
+            style={{ borderRadius: 8 }}
+          />
           <span style={S.logoText}>AnnouncePlus</span>
         </div>
         <div style={S.navRight}>

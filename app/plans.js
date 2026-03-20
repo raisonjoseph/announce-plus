@@ -1,6 +1,7 @@
 export const PLANS = {
   free: {
     name: "Free",
+    billingName: null,
     price: 0,
     maxBars: 1,
     maxMonthlyViews: 2000,
@@ -25,6 +26,7 @@ export const PLANS = {
   },
   starter: {
     name: "Starter",
+    billingName: "Starter",
     price: 4.99,
     maxBars: 3,
     maxMonthlyViews: 10000,
@@ -49,6 +51,7 @@ export const PLANS = {
   },
   pro: {
     name: "Pro",
+    billingName: "Pro",
     price: 9.99,
     maxBars: Infinity,
     maxMonthlyViews: Infinity,
@@ -88,4 +91,11 @@ export function getPlanLimits(planId) {
 export function hasFeature(planId, featureName) {
   const plan = getPlanConfig(planId);
   return plan.features[featureName] ?? false;
+}
+
+export function getPlanIdFromBillingName(billingName) {
+  for (const [id, plan] of Object.entries(PLANS)) {
+    if (plan.billingName === billingName) return id;
+  }
+  return "free";
 }

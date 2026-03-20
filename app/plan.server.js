@@ -1,5 +1,6 @@
 import prisma from "./db.server";
-import { getPlanConfig, getPlanLimits } from "./plans";
+import { getPlanConfig, getPlanLimits, getPlanIdFromBillingName } from "./plans";
+import { STARTER_PLAN, PRO_PLAN } from "./shopify.server";
 
 export async function getShopPlan(shop) {
   let shopPlan = await prisma.shopPlan.findUnique({ where: { shop } });
@@ -15,9 +16,40 @@ export async function getShopPlan(shop) {
 
   return {
     id: shopPlan.plan,
+    chargeId: shopPlan.chargeId,
     ...config,
     ...limits,
   };
+}
+
+export async function updateShopPlan(shop, planId, chargeId = null) {
+  return prisma.shopPlan.upsert({
+    where: { shop },
+    update: { plan: planId, chargeId },
+    create: { shop, plan: planId, chargeId },
+  });
+}
+
+export async function syncPlanFromBilling(billing, shop) {
+  try {
+    const { hasActivePayment, appSubscriptions } = await billing.check({
+      plans: [STARTER_PLAN, PRO_PLAN],
+      isTest: true,
+    });
+
+    if (!hasActivePayment || !appSubscriptions?.length) {
+      await updateShopPlan(shop, "free", null);
+      return getShopPlan(shop);
+    }
+
+    const active = appSubscriptions[0];
+    const planId = getPlanIdFromBillingName(active.name);
+    await updateShopPlan(shop, planId, active.id);
+    return getShopPlan(shop);
+  } catch (e) {
+    console.error("Failed to sync billing:", e);
+    return getShopPlan(shop);
+  }
 }
 
 export async function canCreateBar(shop) {

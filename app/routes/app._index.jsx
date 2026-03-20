@@ -603,6 +603,13 @@ export default function DashboardPage() {
                 size="small"
                 tone={viewCount >= viewLimit * 0.9 ? "critical" : undefined}
               />
+              {plan.id !== "pro" && (
+                <InlineStack align="end">
+                  <Button url="/app/pricing" size="slim">
+                    Upgrade plan
+                  </Button>
+                </InlineStack>
+              )}
             </BlockStack>
           </Card>
         </Layout.Section>

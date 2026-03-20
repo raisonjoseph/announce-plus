@@ -94,8 +94,11 @@ export function hasFeature(planId, featureName) {
 }
 
 export function getPlanIdFromBillingName(billingName) {
+  if (!billingName) return "free";
+  // "Starter Yearly" maps to "starter", "Pro Yearly" maps to "pro"
+  const normalized = billingName.replace(" Yearly", "");
   for (const [id, plan] of Object.entries(PLANS)) {
-    if (plan.billingName === billingName) return id;
+    if (plan.billingName === normalized) return id;
   }
   return "free";
 }

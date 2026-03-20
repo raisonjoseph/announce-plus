@@ -1,6 +1,6 @@
 import prisma from "./db.server";
 import { getPlanConfig, getPlanLimits, getPlanIdFromBillingName } from "./plans";
-import { STARTER_PLAN, PRO_PLAN } from "./shopify.server";
+import { STARTER_PLAN, STARTER_YEARLY_PLAN, PRO_PLAN, PRO_YEARLY_PLAN } from "./shopify.server";
 
 export async function getShopPlan(shop) {
   let shopPlan = await prisma.shopPlan.findUnique({ where: { shop } });
@@ -33,7 +33,7 @@ export async function updateShopPlan(shop, planId, chargeId = null) {
 export async function syncPlanFromBilling(billing, shop) {
   try {
     const { hasActivePayment, appSubscriptions } = await billing.check({
-      plans: [STARTER_PLAN, PRO_PLAN],
+      plans: [STARTER_PLAN, STARTER_YEARLY_PLAN, PRO_PLAN, PRO_YEARLY_PLAN],
       isTest: true,
     });
 

@@ -10,7 +10,9 @@ import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prism
 import prisma from "./db.server";
 
 export const STARTER_PLAN = "Starter";
+export const STARTER_YEARLY_PLAN = "Starter Yearly";
 export const PRO_PLAN = "Pro";
+export const PRO_YEARLY_PLAN = "Pro Yearly";
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY,
@@ -32,12 +34,32 @@ const shopify = shopifyApp({
       ],
       replacementBehavior: BillingReplacementBehavior.ApplyImmediately,
     },
+    [STARTER_YEARLY_PLAN]: {
+      lineItems: [
+        {
+          amount: 47.88,
+          currencyCode: "USD",
+          interval: BillingInterval.Annual,
+        },
+      ],
+      replacementBehavior: BillingReplacementBehavior.ApplyImmediately,
+    },
     [PRO_PLAN]: {
       lineItems: [
         {
           amount: 9.99,
           currencyCode: "USD",
           interval: BillingInterval.Every30Days,
+        },
+      ],
+      replacementBehavior: BillingReplacementBehavior.ApplyImmediately,
+    },
+    [PRO_YEARLY_PLAN]: {
+      lineItems: [
+        {
+          amount: 95.88,
+          currencyCode: "USD",
+          interval: BillingInterval.Annual,
         },
       ],
       replacementBehavior: BillingReplacementBehavior.ApplyImmediately,

@@ -154,6 +154,10 @@
   display: inline-block;
   white-space: nowrap;
   will-change: transform;
+  transform: translateX(calc(100vw + 40px));
+}
+
+.announceplus-bar.ap-running.ap-marquee-ready .ap-bar-text {
   animation: ap-marquee-ltr var(--ap-marquee-speed, 15s) linear infinite;
 }
 
@@ -165,6 +169,10 @@
 
 /* Right to left */
 .announceplus-bar.ap-running.ap-rtl .ap-bar-text {
+  transform: translateX(calc(-100% - 40px));
+}
+
+.announceplus-bar.ap-running.ap-rtl.ap-marquee-ready .ap-bar-text {
   animation-name: ap-marquee-rtl;
 }
 

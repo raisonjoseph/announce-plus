@@ -479,6 +479,12 @@
     if (direction === 'rtl') {
       bar.classList.add('ap-rtl');
     }
+    // Wait one frame so the off-screen position renders first, then start animation
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        bar.classList.add('ap-marquee-ready');
+      });
+    });
   }
 
   function setupRotatingMessages(bar) {

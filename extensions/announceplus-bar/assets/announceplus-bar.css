@@ -147,7 +147,10 @@
   overflow: hidden;
   width: 100%;
   display: flex;
-  flex-wrap: nowrap;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  gap: 0 !important;
+  align-items: center !important;
 }
 
 .announceplus-bar.ap-running .ap-bar-text {

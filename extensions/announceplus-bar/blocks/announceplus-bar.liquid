@@ -56,6 +56,9 @@
           color: {{ bar.textColor | default: '#ffffff' }};
           --ap-bar-color: {{ bar.barColor | default: '#22c55e' }};
           --ap-text-color: {{ bar.textColor | default: '#ffffff' }};
+          --ap-font-size: {% case bar.fontSize %}{% when 'small' %}12px{% when 'large' %}16px{% else %}14px{% endcase %};
+          --ap-font-weight: {% case bar.fontWeight %}{% when 'medium' %}500{% when 'bold' %}700{% else %}400{% endcase %};
+          --ap-text-align: {{ bar.textAlign | default: 'center' }};
         "
       >
         <div class="ap-bar-inner">

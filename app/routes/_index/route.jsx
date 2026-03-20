@@ -24,7 +24,7 @@ export const meta = () => [
       "Show a live free shipping progress bar that updates as customers shop. Increase average order value with smart announcement bars.",
   },
   { property: "og:type", content: "website" },
-  { property: "og:image", content: "https://announce-plus.vercel.app/announceplus-icon.png" },
+  { property: "og:image", content: "https://announce-plus.makerbase.in/announceplus-icon.png" },
   { property: "og:site_name", content: "AnnouncePlus by Makerbase" },
   { name: "twitter:card", content: "summary_large_image" },
   { name: "twitter:title", content: "AnnouncePlus — Shopify Announcement Bar App" },

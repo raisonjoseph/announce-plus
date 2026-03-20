@@ -2,7 +2,7 @@
 
 client_id = "512ea10fd2150c887cec1de609c54976"
 name = "AnnouncePlus"
-application_url = "https://announce-plus.vercel.app"
+application_url = "https://announce-plus.makerbase.in"
 embedded = true
 
 [build]
@@ -31,7 +31,7 @@ use_legacy_install_flow = false
 
 [auth]
 redirect_urls = [
-    "https://announce-plus.vercel.app/auth/callback",
-    "https://announce-plus.vercel.app/auth/shopify/callback",
-    "https://announce-plus.vercel.app/api/auth/callback"
+    "https://announce-plus.makerbase.in/auth/callback",
+    "https://announce-plus.makerbase.in/auth/shopify/callback",
+    "https://announce-plus.makerbase.in/api/auth/callback"
 ]

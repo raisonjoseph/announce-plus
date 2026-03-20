@@ -145,12 +145,111 @@
     return true;
   }
 
+  function checkSchedule(bar) {
+    var start = bar.dataset.startDate || '';
+    var end = bar.dataset.endDate || '';
+    if (!start && !end) return true;
+
+    var now = new Date();
+    if (start && new Date(start) > now) return false;
+    if (end) {
+      var endDate = new Date(end);
+      endDate.setHours(23, 59, 59, 999);
+      if (endDate < now) return false;
+    }
+    return true;
+  }
+
+  function checkActiveDays(bar) {
+    var daysAttr = bar.dataset.activeDays || '';
+    if (!daysAttr || daysAttr === '[]') return true;
+
+    var days;
+    try { days = JSON.parse(daysAttr); } catch (e) { return true; }
+    if (!Array.isArray(days) || days.length === 0 || days.length === 7) return true;
+
+    var today = new Date().getDay().toString();
+    return days.indexOf(today) !== -1;
+  }
+
+  function checkCustomerTags(bar) {
+    var required = bar.dataset.requiredTags || '';
+    if (!required) return true;
+
+    var customerTags = (bar.dataset.customerTags || '').toLowerCase().split(',').map(function (t) { return t.trim(); });
+    var requiredTags = required.toLowerCase().split(',').map(function (t) { return t.trim(); });
+
+    for (var i = 0; i < requiredTags.length; i++) {
+      if (requiredTags[i] && customerTags.indexOf(requiredTags[i]) !== -1) return true;
+    }
+    return false;
+  }
+
+  function checkCountry(bar) {
+    var target = bar.dataset.countryTarget || '';
+    if (!target) return true;
+
+    var visitorCountry = (bar.dataset.country || '').toUpperCase();
+    if (!visitorCountry) return true; // Can't determine, allow
+
+    var countries = target.toUpperCase().split(',').map(function (c) { return c.trim(); });
+    return countries.indexOf(visitorCountry) !== -1;
+  }
+
+  function checkUtm(bar) {
+    var reqSource = bar.dataset.utmSource || '';
+    var reqMedium = bar.dataset.utmMedium || '';
+    var reqCampaign = bar.dataset.utmCampaign || '';
+    if (!reqSource && !reqMedium && !reqCampaign) return true;
+
+    // Check URL params first, then sessionStorage (persisted from landing)
+    var params = new URLSearchParams(window.location.search);
+    var source = params.get('utm_source') || '';
+    var medium = params.get('utm_medium') || '';
+    var campaign = params.get('utm_campaign') || '';
+
+    // Persist UTM on landing
+    try {
+      if (source) sessionStorage.setItem('ap_utm_source', source);
+      if (medium) sessionStorage.setItem('ap_utm_medium', medium);
+      if (campaign) sessionStorage.setItem('ap_utm_campaign', campaign);
+
+      source = source || sessionStorage.getItem('ap_utm_source') || '';
+      medium = medium || sessionStorage.getItem('ap_utm_medium') || '';
+      campaign = campaign || sessionStorage.getItem('ap_utm_campaign') || '';
+    } catch (e) {}
+
+    if (reqSource && source.toLowerCase() !== reqSource.toLowerCase()) return false;
+    if (reqMedium && medium.toLowerCase() !== reqMedium.toLowerCase()) return false;
+    if (reqCampaign && campaign.toLowerCase() !== reqCampaign.toLowerCase()) return false;
+    return true;
+  }
+
+  function checkMinPageViews(bar) {
+    var min = parseInt(bar.dataset.minPageViews, 10) || 0;
+    if (min <= 0) return true;
+
+    var count = 1;
+    try {
+      count = parseInt(sessionStorage.getItem('ap_page_views') || '0', 10) + 1;
+      sessionStorage.setItem('ap_page_views', count.toString());
+    } catch (e) {}
+
+    return count >= min;
+  }
+
   function shouldShowBar(bar) {
     if (!checkPageTarget(bar)) return false;
     if (!checkVisitorTarget(bar)) return false;
     if (!checkDeviceTarget(bar)) return false;
     if (!checkUrlTarget(bar)) return false;
     if (!checkCustomerStatus(bar)) return false;
+    if (!checkSchedule(bar)) return false;
+    if (!checkActiveDays(bar)) return false;
+    if (!checkCustomerTags(bar)) return false;
+    if (!checkCountry(bar)) return false;
+    if (!checkUtm(bar)) return false;
+    if (!checkMinPageViews(bar)) return false;
     return true;
   }
 
@@ -176,6 +275,33 @@
     }
 
     window.addEventListener('scroll', onScroll, { passive: true });
+  }
+
+  function setupExitIntent(bar) {
+    if (bar.dataset.exitIntent !== 'true') return;
+
+    var fired = false;
+    bar.style.display = 'none';
+
+    document.addEventListener('mouseleave', function (e) {
+      if (fired) return;
+      if (e.clientY < 10) {
+        fired = true;
+        bar.style.display = '';
+        bar.classList.remove('ap-hidden');
+        try { sessionStorage.setItem('ap_exit_intent_' + (bar.id || 'default'), '1'); } catch (ex) {}
+      }
+    });
+
+    // On mobile, use visibilitychange as a proxy
+    document.addEventListener('visibilitychange', function () {
+      if (fired) return;
+      if (document.visibilityState === 'hidden') {
+        fired = true;
+        bar.style.display = '';
+        bar.classList.remove('ap-hidden');
+      }
+    });
   }
 
   function applyDelay(bar, callback) {
@@ -508,7 +634,10 @@
         });
       };
 
-      if (scrollTrigger > 0) {
+      // Exit intent bars stay hidden until triggered
+      if (bar.dataset.exitIntent === 'true') {
+        setupExitIntent(bar);
+      } else if (scrollTrigger > 0) {
         setupScrollTrigger(bar, showBar);
       } else {
         showBar();

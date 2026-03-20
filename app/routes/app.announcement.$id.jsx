@@ -137,6 +137,16 @@ export const action = async ({ request, params }) => {
     cartItemMax: parseInt(formData.get("cartItemMax"), 10) || 0,
     scrollTrigger: parseInt(formData.get("scrollTrigger"), 10) || 0,
     customerStatus: formData.get("customerStatus") || "any",
+    startDate: formData.get("startDate") || "",
+    endDate: formData.get("endDate") || "",
+    activeDays: (() => { try { return JSON.parse(formData.get("activeDays") || "[]"); } catch (e) { return []; } })(),
+    customerTags: formData.get("customerTags") || "",
+    countryTarget: formData.get("countryTarget") || "",
+    exitIntent: formData.get("exitIntent") === "true",
+    utmSource: formData.get("utmSource") || "",
+    utmMedium: formData.get("utmMedium") || "",
+    utmCampaign: formData.get("utmCampaign") || "",
+    minPageViews: parseInt(formData.get("minPageViews"), 10) || 0,
     announcementSubtype: formData.get("announcementSubtype") || "simple",
   };
 
@@ -452,6 +462,21 @@ export default function AnnouncementEditorPage() {
   const [showPercentage, setShowPercentage] = useState(
     saved.showPercentage ?? false,
   );
+  // Pro targeting
+  const [startDate, setStartDate] = useState(saved.startDate || "");
+  const [endDate, setEndDate] = useState(saved.endDate || "");
+  const [activeDays, setActiveDays] = useState(
+    saved.activeDays || ["0", "1", "2", "3", "4", "5", "6"],
+  );
+  const [customerTags, setCustomerTags] = useState(saved.customerTags || "");
+  const [countryTarget, setCountryTarget] = useState(saved.countryTarget || "");
+  const [exitIntent, setExitIntent] = useState(saved.exitIntent ?? false);
+  const [utmSource, setUtmSource] = useState(saved.utmSource || "");
+  const [utmMedium, setUtmMedium] = useState(saved.utmMedium || "");
+  const [utmCampaign, setUtmCampaign] = useState(saved.utmCampaign || "");
+  const [minPageViews, setMinPageViews] = useState(
+    (saved.minPageViews || 0).toString(),
+  );
 
   // ─── Tabs ───
   const [selectedTab, setSelectedTab] = useState(0);
@@ -494,6 +519,16 @@ export default function AnnouncementEditorPage() {
     formData.set("cartItemMax", cartItemMax);
     formData.set("scrollTrigger", scrollTrigger);
     formData.set("customerStatus", customerStatus);
+    formData.set("startDate", startDate);
+    formData.set("endDate", endDate);
+    formData.set("activeDays", JSON.stringify(activeDays));
+    formData.set("customerTags", customerTags);
+    formData.set("countryTarget", countryTarget);
+    formData.set("exitIntent", exitIntent.toString());
+    formData.set("utmSource", utmSource);
+    formData.set("utmMedium", utmMedium);
+    formData.set("utmCampaign", utmCampaign);
+    formData.set("minPageViews", minPageViews);
     formData.set("announcementSubtype", announcementSubtype);
 
     if (type === "topbar") {
@@ -519,6 +554,8 @@ export default function AnnouncementEditorPage() {
     showTo, deviceTarget, delaySeconds, cartState,
     targetUrls, excludeUrls, cartValueMin, cartValueMax,
     cartItemMin, cartItemMax, scrollTrigger, customerStatus,
+    startDate, endDate, activeDays, customerTags, countryTarget,
+    exitIntent, utmSource, utmMedium, utmCampaign, minPageViews,
     announcementSubtype, message, showCta, ctaText, ctaUrl,
     rotatingMessages, rotationSpeed, rotationAnimation,
     threshold, currencySymbol, barMessage, successMessage, barColor,
@@ -1215,24 +1252,149 @@ export default function AnnouncementEditorPage() {
                         <Badge>Pro</Badge>
                       </InlineStack>
                       <FormLayout>
-                        <TextField
-                          label="Start date"
-                          value=""
-                          disabled
-                          autoComplete="off"
-                          placeholder="YYYY-MM-DD"
-                        />
-                        <TextField
-                          label="End date"
-                          value=""
-                          disabled
-                          autoComplete="off"
-                          placeholder="YYYY-MM-DD"
-                        />
+                        <FormLayout.Group>
+                          <TextField
+                            label="Start date"
+                            type="date"
+                            value={startDate}
+                            onChange={setStartDate}
+                            autoComplete="off"
+                          />
+                          <TextField
+                            label="End date"
+                            type="date"
+                            value={endDate}
+                            onChange={setEndDate}
+                            autoComplete="off"
+                          />
+                        </FormLayout.Group>
                       </FormLayout>
                       <Text tone="subdued" variant="bodySm" as="p">
-                        Upgrade to Pro to schedule announcements.
+                        Leave empty to show indefinitely.
                       </Text>
+                    </BlockStack>
+
+                    <Divider />
+
+                    <BlockStack gap="300">
+                      <InlineStack gap="200" blockAlign="center">
+                        <Text variant="headingSm" as="h3">
+                          Active days
+                        </Text>
+                        <Badge>Pro</Badge>
+                      </InlineStack>
+                      <ChoiceList
+                        allowMultiple
+                        title="Show on these days"
+                        choices={[
+                          { label: "Sunday", value: "0" },
+                          { label: "Monday", value: "1" },
+                          { label: "Tuesday", value: "2" },
+                          { label: "Wednesday", value: "3" },
+                          { label: "Thursday", value: "4" },
+                          { label: "Friday", value: "5" },
+                          { label: "Saturday", value: "6" },
+                        ]}
+                        selected={activeDays}
+                        onChange={setActiveDays}
+                      />
+                    </BlockStack>
+
+                    <Divider />
+
+                    <BlockStack gap="300">
+                      <InlineStack gap="200" blockAlign="center">
+                        <Text variant="headingSm" as="h3">
+                          Customer tags
+                        </Text>
+                        <Badge>Pro</Badge>
+                      </InlineStack>
+                      <TextField
+                        label="Show to customers with these tags"
+                        value={customerTags}
+                        onChange={setCustomerTags}
+                        helpText="Comma-separated. e.g. VIP, wholesale, loyalty"
+                        autoComplete="off"
+                        placeholder="VIP, wholesale"
+                      />
+                    </BlockStack>
+
+                    <Divider />
+
+                    <BlockStack gap="300">
+                      <InlineStack gap="200" blockAlign="center">
+                        <Text variant="headingSm" as="h3">
+                          Country targeting
+                        </Text>
+                        <Badge>Pro</Badge>
+                      </InlineStack>
+                      <TextField
+                        label="Show to visitors from these countries"
+                        value={countryTarget}
+                        onChange={setCountryTarget}
+                        helpText="ISO country codes, comma-separated. e.g. US, CA, GB"
+                        autoComplete="off"
+                        placeholder="US, CA, GB"
+                      />
+                    </BlockStack>
+
+                    <Divider />
+
+                    <BlockStack gap="300">
+                      <InlineStack gap="200" blockAlign="center">
+                        <Text variant="headingSm" as="h3">
+                          Referral / UTM targeting
+                        </Text>
+                        <Badge>Pro</Badge>
+                      </InlineStack>
+                      <FormLayout>
+                        <TextField
+                          label="UTM Source"
+                          value={utmSource}
+                          onChange={setUtmSource}
+                          helpText="e.g. facebook, instagram, google"
+                          autoComplete="off"
+                          placeholder="facebook"
+                        />
+                        <TextField
+                          label="UTM Medium"
+                          value={utmMedium}
+                          onChange={setUtmMedium}
+                          autoComplete="off"
+                          placeholder="cpc"
+                        />
+                        <TextField
+                          label="UTM Campaign"
+                          value={utmCampaign}
+                          onChange={setUtmCampaign}
+                          autoComplete="off"
+                          placeholder="summer_sale"
+                        />
+                      </FormLayout>
+                    </BlockStack>
+
+                    <Divider />
+
+                    <BlockStack gap="300">
+                      <InlineStack gap="200" blockAlign="center">
+                        <Text variant="headingSm" as="h3">
+                          Behavioral triggers
+                        </Text>
+                        <Badge>Pro</Badge>
+                      </InlineStack>
+                      <Checkbox
+                        label="Exit intent — show when visitor is about to leave"
+                        checked={exitIntent}
+                        onChange={setExitIntent}
+                      />
+                      <TextField
+                        label="Minimum page views"
+                        type="number"
+                        value={minPageViews}
+                        onChange={setMinPageViews}
+                        helpText="0 = show on first page. 3 = show after visitor views 3 pages."
+                        autoComplete="off"
+                      />
                     </BlockStack>
 
                     {type === "shipping_goal" && (

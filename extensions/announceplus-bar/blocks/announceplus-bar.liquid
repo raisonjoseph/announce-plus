@@ -5,7 +5,7 @@
   <link rel="stylesheet" href="{{ 'announceplus-bar.css' | asset_url }}" />
 
   {%- for bar in ap_bars.value -%}
-    {%- if bar.isEnabled and bar.status == "published" -%}
+    {%- if bar.isEnabled and bar.status == "published" and bar.type != "product_shipping_goal" -%}
       <div
         id="ap-bar-{{ forloop.index }}"
         class="announceplus-bar"

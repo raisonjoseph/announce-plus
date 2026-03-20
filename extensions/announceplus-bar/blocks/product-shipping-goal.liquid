@@ -52,7 +52,7 @@
         >
           <p class="ap-product-goal-text">
             {%- if bar.emptyMessage != blank -%}
-              {{ bar.emptyMessage | replace: '{order-value}', bar.threshold | default: '$50' }}
+              {{ bar.emptyMessage }}
             {%- else -%}
               Loading...
             {%- endif -%}

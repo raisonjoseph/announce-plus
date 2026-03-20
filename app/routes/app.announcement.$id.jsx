@@ -25,6 +25,7 @@ import {
 } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
+import { canCreateBar } from "../plan.server";
 
 const TOPBAR_DEFAULTS = {
   message: "Welcome to our store!",
@@ -160,6 +161,13 @@ export const action = async ({ request, params }) => {
   }
 
   if (params.id === "new") {
+    const barCheck = await canCreateBar(shop);
+    if (!barCheck.allowed) {
+      return json({
+        error: `You've reached the limit of ${barCheck.limit} announcement bar${barCheck.limit === 1 ? "" : "s"} on the ${barCheck.plan.name} plan. Upgrade to create more.`,
+      });
+    }
+
     await prisma.announcement.create({
       data: {
         shop,

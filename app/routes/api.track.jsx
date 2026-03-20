@@ -1,13 +1,12 @@
 import { json } from "@remix-run/node";
 import prisma from "../db.server";
+import { getShopPlan, getMonthlyViewCount } from "../plan.server";
 
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
-
-const FREE_LIMIT = 2000;
 
 export async function action({ request }) {
   if (request.method !== "POST") {
@@ -37,23 +36,15 @@ export async function action({ request }) {
   }
 
   try {
-    const startOfMonth = new Date();
-    startOfMonth.setDate(1);
-    startOfMonth.setHours(0, 0, 0, 0);
+    const plan = await getShopPlan(shop);
+    const monthlyViews = await getMonthlyViewCount(shop);
 
-    const monthlyViews = await prisma.barView.count({
-      where: {
-        shop,
-        viewedAt: { gte: startOfMonth },
-      },
-    });
-
-    if (monthlyViews >= FREE_LIMIT) {
+    if (plan.maxMonthlyViews !== Infinity && monthlyViews >= plan.maxMonthlyViews) {
       return json(
         {
           ok: false,
           reason: "limit_reached",
-          limit: FREE_LIMIT,
+          limit: plan.maxMonthlyViews,
           current: monthlyViews,
         },
         { headers: CORS_HEADERS },
@@ -64,21 +55,20 @@ export async function action({ request }) {
       data: { shop, announcementId: barId },
     });
 
-    // Increment viewCount on the announcement — ignore if barId not found
     try {
       await prisma.announcement.update({
         where: { id: barId },
         data: { viewCount: { increment: 1 } },
       });
     } catch (e) {
-      // barId may not exist in DB (e.g. deleted) — that's fine
+      // barId may not exist in DB — that's fine
     }
 
     return json(
       {
         ok: true,
         current: monthlyViews + 1,
-        limit: FREE_LIMIT,
+        limit: plan.maxMonthlyViews,
       },
       { headers: CORS_HEADERS },
     );
@@ -91,7 +81,6 @@ export async function action({ request }) {
 }
 
 export async function loader({ request }) {
-  // Handle CORS preflight
   if (request.method === "OPTIONS") {
     return new Response(null, {
       status: 204,

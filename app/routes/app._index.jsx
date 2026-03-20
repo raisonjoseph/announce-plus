@@ -28,6 +28,7 @@ import {
 } from "@shopify/polaris-icons";
 import { authenticate } from "../shopify.server";
 import prisma from "../db.server";
+import { getShopPlan, getMonthlyViewCount } from "../plan.server";
 
 // ─── Loader ─────────────────────────────────────────
 
@@ -40,17 +41,8 @@ export const loader = async ({ request }) => {
     orderBy: { createdAt: "desc" },
   });
 
-  // Monthly view count from BarView table
-  const startOfMonth = new Date();
-  startOfMonth.setDate(1);
-  startOfMonth.setHours(0, 0, 0, 0);
-
-  const monthlyViewCount = await prisma.barView.count({
-    where: {
-      shop,
-      viewedAt: { gte: startOfMonth },
-    },
-  });
+  const shopPlan = await getShopPlan(shop);
+  const monthlyViewCount = await getMonthlyViewCount(shop);
 
   // Find or create setup progress
   let setup = await prisma.setupProgress.findUnique({
@@ -78,8 +70,8 @@ export const loader = async ({ request }) => {
     shop,
     apiKey: process.env.SHOPIFY_API_KEY || "",
     isDev,
-    plan: "free",
-    viewLimit: 2000,
+    plan: shopPlan,
+    viewLimit: shopPlan.maxMonthlyViews,
     viewCount: monthlyViewCount,
     setup,
   });
@@ -601,7 +593,7 @@ export default function DashboardPage() {
               <Text as="p" variant="bodyMd">
                 You're currently on{" "}
                 <Text as="span" fontWeight="bold">
-                  {plan === "free" ? "Free" : plan}
+                  {plan.name}
                 </Text>{" "}
                 ({viewCount} / {viewLimit} monthly views). One visitor can
                 have multiple views per session.

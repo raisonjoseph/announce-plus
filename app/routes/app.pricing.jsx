@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { json } from "@remix-run/node";
-import { useLoaderData, useNavigation, useSubmit, useActionData } from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
 import {
   Page,
   Layout,
@@ -11,70 +11,27 @@ import {
   Button,
   Badge,
   Divider,
-  Banner,
+  ProgressBar,
 } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
-import { syncPlanFromBilling, updateShopPlan } from "../plan.server";
+import { getShopPlan, getMonthlyViewCount } from "../plan.server";
 
 export const loader = async ({ request }) => {
-  const { billing, session } = await authenticate.admin(request);
+  const { session } = await authenticate.admin(request);
   const shop = session.shop;
-  const plan = await syncPlanFromBilling(billing, shop);
-  return json({ plan, shop });
-};
-
-export const action = async ({ request }) => {
-  const { billing, session } = await authenticate.admin(request);
-  const formData = await request.formData();
-  const actionType = formData.get("_action");
-
-  if (actionType === "subscribe") {
-    const planName = formData.get("plan");
-    // This throws a redirect to Shopify's payment confirmation page
-    await billing.request({
-      plan: planName,
-      isTest: true,
-    });
-    return null;
-  }
-
-  if (actionType === "cancel") {
-    const chargeId = formData.get("chargeId");
-    if (chargeId) {
-      await billing.cancel({
-        subscriptionId: chargeId,
-        isTest: true,
-        prorate: true,
-      });
-    }
-    await updateShopPlan(session.shop, "free", null);
-    return json({ success: true, cancelled: true });
-  }
-
-  return json({ success: false });
+  const plan = await getShopPlan(shop);
+  const viewCount = await getMonthlyViewCount(shop);
+  return json({ plan, shop, viewCount });
 };
 
 export default function PricingPage() {
-  const { plan } = useLoaderData();
-  const actionData = useActionData();
-  const navigation = useNavigation();
-  const submit = useSubmit();
-  const isLoading = navigation.state === "submitting";
+  const { plan, shop, viewCount } = useLoaderData();
   const [isYearly, setIsYearly] = useState(false);
+  const shopSlug = shop.replace(".myshopify.com", "");
 
-  function handleSubscribe(planName) {
-    const formData = new FormData();
-    formData.set("_action", "subscribe");
-    formData.set("plan", planName);
-    submit(formData, { method: "POST" });
-  }
-
-  function handleCancel() {
-    if (!confirm("Cancel your subscription? You'll be downgraded to the Free plan.")) return;
-    const formData = new FormData();
-    formData.set("_action", "cancel");
-    formData.set("chargeId", plan.chargeId || "");
-    submit(formData, { method: "POST" });
+  function handleUpgrade() {
+    window.top.location.href =
+      `https://admin.shopify.com/store/${shopSlug}/charges/announceplus/pricing_plans`;
   }
 
   const plans = [
@@ -83,8 +40,6 @@ export default function PricingPage() {
       name: "Free",
       monthlyPrice: 0,
       yearlyPrice: 0,
-      billingMonthly: null,
-      billingYearly: null,
       desc: "For stores getting started",
       features: [
         { text: "1 announcement bar", ok: true },
@@ -104,8 +59,6 @@ export default function PricingPage() {
       monthlyPrice: 4.99,
       yearlyPrice: 3.99,
       yearlyTotal: 47.88,
-      billingMonthly: "Starter",
-      billingYearly: "Starter Yearly",
       desc: "For growing stores",
       features: [
         { text: "3 bars & goals", ok: true },
@@ -125,8 +78,6 @@ export default function PricingPage() {
       monthlyPrice: 9.99,
       yearlyPrice: 7.99,
       yearlyTotal: 95.88,
-      billingMonthly: "Pro",
-      billingYearly: "Pro Yearly",
       desc: "For serious stores",
       highlight: true,
       features: [
@@ -144,20 +95,51 @@ export default function PricingPage() {
   ];
 
   return (
-    <Page title="Pricing" backAction={{ url: "/app" }}>
+    <Page title="Plan & billing" backAction={{ url: "/app" }}>
       <Layout>
-        {actionData?.cancelled && (
-          <Layout.Section>
-            <Banner tone="success" title="Subscription cancelled. You're now on the Free plan." />
-          </Layout.Section>
-        )}
+        {/* Current plan + usage */}
+        <Layout.Section>
+          <Card>
+            <BlockStack gap="400">
+              <InlineStack align="space-between" blockAlign="center">
+                <InlineStack gap="200" blockAlign="center">
+                  <Text variant="headingLg" as="h2">{plan.name} plan</Text>
+                  <Badge tone="success">Active</Badge>
+                </InlineStack>
+                {plan.id !== "pro" && (
+                  <Button variant="primary" onClick={handleUpgrade}>
+                    Upgrade
+                  </Button>
+                )}
+              </InlineStack>
+              <Divider />
+              <InlineStack align="space-between">
+                <Text variant="bodyMd" as="span">Monthly views</Text>
+                <Text variant="bodyMd" as="span" fontWeight="bold">
+                  {viewCount.toLocaleString()} / {plan.maxMonthlyViews === Infinity ? "\u221E" : plan.maxMonthlyViews.toLocaleString()}
+                </Text>
+              </InlineStack>
+              {plan.maxMonthlyViews !== Infinity && (
+                <ProgressBar
+                  progress={Math.min((viewCount / plan.maxMonthlyViews) * 100, 100)}
+                  size="small"
+                  tone={viewCount >= plan.maxMonthlyViews * 0.9 ? "critical" : undefined}
+                />
+              )}
+              <InlineStack align="space-between">
+                <Text variant="bodyMd" as="span">Announcement bars</Text>
+                <Text variant="bodyMd" as="span" fontWeight="bold">
+                  {plan.maxBars === Infinity ? "Unlimited" : plan.maxBars}
+                </Text>
+              </InlineStack>
+            </BlockStack>
+          </Card>
+        </Layout.Section>
 
         {/* Toggle */}
         <Layout.Section>
           <InlineStack align="center" gap="300" blockAlign="center">
-            <Text as="span" variant="bodyMd" fontWeight={!isYearly ? "bold" : "regular"}>
-              Monthly
-            </Text>
+            <Text as="span" variant="bodyMd" fontWeight={!isYearly ? "bold" : "regular"}>Monthly</Text>
             <div
               onClick={() => setIsYearly(!isYearly)}
               style={{
@@ -184,10 +166,7 @@ export default function PricingPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, alignItems: "stretch" }}>
             {plans.map((p) => {
               const isCurrent = plan.id === p.id;
-              const isUpgrade = (plan.id === "free" && p.id !== "free") || (plan.id === "starter" && p.id === "pro");
-              const isDowngrade = (plan.id === "pro" && p.id !== "pro") || (plan.id === "starter" && p.id === "free");
               const displayPrice = isYearly ? p.yearlyPrice : p.monthlyPrice;
-              const billingName = isYearly ? p.billingYearly : p.billingMonthly;
 
               return (
                 <div key={p.id} style={{
@@ -207,25 +186,16 @@ export default function PricingPage() {
                     <Text variant="headingMd" as="h2">{p.name}</Text>
                     {isCurrent && <Badge tone="success">Current</Badge>}
                   </InlineStack>
-
                   <Text variant="bodySm" as="p" tone="subdued">{p.desc}</Text>
 
                   <div style={{ marginTop: 12, marginBottom: 4 }}>
                     <InlineStack gap="100" blockAlign="end">
-                      <Text variant="heading2xl" as="span">
-                        ${displayPrice.toFixed(2)}
-                      </Text>
-                      {p.monthlyPrice > 0 && (
-                        <Text variant="bodySm" as="span" tone="subdued">/mo</Text>
-                      )}
+                      <Text variant="heading2xl" as="span">${displayPrice.toFixed(2)}</Text>
+                      {p.monthlyPrice > 0 && <Text variant="bodySm" as="span" tone="subdued">/mo</Text>}
                     </InlineStack>
                   </div>
                   <Text variant="bodySm" as="p" tone="subdued">
-                    {p.monthlyPrice === 0
-                      ? "Free forever"
-                      : isYearly
-                        ? `$${p.yearlyTotal.toFixed(2)}/year — save 20%`
-                        : "Billed monthly"}
+                    {p.monthlyPrice === 0 ? "Free forever" : isYearly ? `$${p.yearlyTotal.toFixed(2)}/year — save 20%` : "Billed monthly"}
                   </Text>
 
                   <div style={{ margin: "16px 0" }}><Divider /></div>
@@ -237,9 +207,7 @@ export default function PricingPage() {
                           <span style={{ color: f.ok ? "#22c55e" : "#d1d5db", fontWeight: 700, fontSize: 13 }}>
                             {f.ok ? "\u2713" : "\u2715"}
                           </span>
-                          <Text variant="bodySm" as="span" tone={f.ok ? undefined : "subdued"}>
-                            {f.text}
-                          </Text>
+                          <Text variant="bodySm" as="span" tone={f.ok ? undefined : "subdued"}>{f.text}</Text>
                         </InlineStack>
                       ))}
                     </BlockStack>
@@ -247,22 +215,16 @@ export default function PricingPage() {
 
                   <div style={{ marginTop: 20 }}>
                     {isCurrent ? (
-                      plan.id !== "free" ? (
-                        <Button fullWidth tone="critical" variant="plain" onClick={handleCancel} loading={isLoading}>
-                          Cancel subscription
-                        </Button>
-                      ) : (
-                        <Button fullWidth disabled>Current plan</Button>
-                      )
-                    ) : isUpgrade ? (
-                      <Button fullWidth variant="primary" onClick={() => handleSubscribe(billingName)} loading={isLoading}>
+                      <Button fullWidth disabled>Current plan</Button>
+                    ) : p.monthlyPrice > plan.price ? (
+                      <Button fullWidth variant={p.highlight ? "primary" : undefined} onClick={handleUpgrade}>
                         Upgrade to {p.name}
                       </Button>
-                    ) : isDowngrade ? (
-                      <Button fullWidth onClick={() => p.id === "free" ? handleCancel() : handleSubscribe(billingName)} loading={isLoading}>
-                        Downgrade to {p.name}
+                    ) : (
+                      <Button fullWidth onClick={handleUpgrade}>
+                        Change to {p.name}
                       </Button>
-                    ) : null}
+                    )}
                   </div>
                 </div>
               );

@@ -204,7 +204,12 @@ export default function PricingPage() {
                       <Button
                         fullWidth
                         variant={p.highlight ? "primary" : undefined}
-                        url={`https://${shop}/admin/apps/announceplus`}
+                        onClick={() => {
+                          if (window.shopify) {
+                            window.shopify.toast.show("Redirecting to plan selection...");
+                          }
+                          open(`https://${shop}/admin/apps/announceplus`, "_top");
+                        }}
                       >
                         {p.monthlyPrice > plan.price ? "Upgrade" : "Change"} to {p.name}
                       </Button>

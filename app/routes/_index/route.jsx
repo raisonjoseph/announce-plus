@@ -817,6 +817,7 @@ export default function LandingPage() {
         <span style={S.footerText}>AnnouncePlus by Makerbase</span>
         <nav style={S.footerLinks} aria-label="Footer links">
           {[
+            { label: "Pricing", href: "/pricing" },
             { label: "Privacy Policy", href: "/privacy" },
             { label: "FAQ", href: "/faq" },
             { label: "Support", href: "mailto:support@makerbase.app" },

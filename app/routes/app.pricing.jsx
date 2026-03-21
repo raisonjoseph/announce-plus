@@ -205,10 +205,15 @@ export default function PricingPage() {
                         fullWidth
                         variant={p.highlight ? "primary" : undefined}
                         onClick={() => {
-                          if (window.shopify) {
-                            window.shopify.toast.show("Redirecting to plan selection...");
+                          // Use App Bridge to redirect outside the iframe
+                          if (window.shopify?.redirectTo) {
+                            window.shopify.redirectTo(
+                              `https://admin.shopify.com/store/${shop.replace(".myshopify.com", "")}/charges/announceplus/pricing_plans`
+                            );
+                          } else {
+                            window.top.location.href =
+                              `https://admin.shopify.com/store/${shop.replace(".myshopify.com", "")}/charges/announceplus/pricing_plans`;
                           }
-                          open(`https://${shop}/admin/apps/announceplus`, "_top");
                         }}
                       >
                         {p.monthlyPrice > plan.price ? "Upgrade" : "Change"} to {p.name}

@@ -70,8 +70,8 @@ export const loader = async ({ request }) => {
     shop,
     apiKey: process.env.SHOPIFY_API_KEY || "",
     isDev,
-    plan: shopPlan,
-    viewLimit: shopPlan.maxMonthlyViews || 2000,
+    plan: shopPlan || { id: "free", name: "Free", price: 0, maxBars: 1, maxMonthlyViews: 2000 },
+    viewLimit: shopPlan?.maxMonthlyViews || 2000,
     viewCount: monthlyViewCount || 0,
     setup,
   });
@@ -593,7 +593,7 @@ export default function DashboardPage() {
               <Text as="p" variant="bodyMd">
                 You're currently on{" "}
                 <Text as="span" fontWeight="bold">
-                  {plan.name}
+                  {plan?.name || "Free"}
                 </Text>{" "}
                 ({(viewCount || 0).toLocaleString()} / {viewLimit === Infinity ? "\u221E" : (viewLimit || 0).toLocaleString()} monthly views). One visitor can
                 have multiple views per session.
@@ -603,7 +603,7 @@ export default function DashboardPage() {
                 size="small"
                 tone={viewCount >= viewLimit * 0.9 ? "critical" : undefined}
               />
-              {plan.id !== "pro" && (
+              {plan?.id !== "pro" && (
                 <InlineStack align="end">
                   <Button url="/app/pricing" size="slim">
                     Upgrade plan

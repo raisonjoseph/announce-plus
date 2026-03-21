@@ -599,9 +599,9 @@ export default function DashboardPage() {
                 have multiple views per session.
               </Text>
               <ProgressBar
-                progress={Math.min((viewCount / viewLimit) * 100, 100)}
+                progress={Math.min(((viewCount || 0) / (viewLimit || 2000)) * 100, 100)}
                 size="small"
-                tone={viewCount >= viewLimit * 0.9 ? "critical" : undefined}
+                tone={(viewCount || 0) >= (viewLimit || 2000) * 0.9 ? "critical" : undefined}
               />
               {plan?.id !== "pro" && (
                 <InlineStack align="end">
@@ -615,12 +615,12 @@ export default function DashboardPage() {
         </Layout.Section>
 
         {/* View limit warning */}
-        {viewCount >= viewLimit * 0.8 && (
+        {(viewCount || 0) >= (viewLimit || 2000) * 0.8 && (
           <Layout.Section>
             <Banner tone="warning" title="Approaching view limit">
               <p>
-                You've used {viewCount.toLocaleString()} of your{" "}
-                {viewLimit.toLocaleString()} monthly views. Upgrade to Pro
+                You've used {(viewCount || 0).toLocaleString()} of your{" "}
+                {(viewLimit || 2000).toLocaleString()} monthly views. Upgrade to Pro
                 for unlimited views.
               </p>
             </Banner>

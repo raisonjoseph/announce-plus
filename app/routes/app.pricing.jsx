@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { json } from "@remix-run/node";
-import { useLoaderData } from "@remix-run/react";
+import { useLoaderData, useNavigation, useSubmit, useActionData } from "@remix-run/react";
 import {
   Page,
   Layout,
@@ -11,36 +11,77 @@ import {
   Button,
   Badge,
   Divider,
+  Banner,
   ProgressBar,
 } from "@shopify/polaris";
 import { authenticate } from "../shopify.server";
-import { getShopPlan, getMonthlyViewCount } from "../plan.server";
+import { syncPlanFromBilling, updateShopPlan, getMonthlyViewCount } from "../plan.server";
 
 export const loader = async ({ request }) => {
-  const { session } = await authenticate.admin(request);
+  const { billing, session } = await authenticate.admin(request);
   const shop = session.shop;
-  const plan = await getShopPlan(shop);
+  const plan = await syncPlanFromBilling(billing, shop);
   const viewCount = await getMonthlyViewCount(shop);
   return json({ plan, shop, viewCount });
 };
 
+export const action = async ({ request }) => {
+  const { billing, session } = await authenticate.admin(request);
+  const formData = await request.formData();
+  const actionType = formData.get("_action");
+
+  if (actionType === "subscribe") {
+    const planName = formData.get("plan");
+    await billing.request({
+      plan: planName,
+      isTest: true,
+    });
+    return null;
+  }
+
+  if (actionType === "cancel") {
+    const chargeId = formData.get("chargeId");
+    if (chargeId) {
+      await billing.cancel({
+        subscriptionId: chargeId,
+        isTest: true,
+        prorate: true,
+      });
+    }
+    await updateShopPlan(session.shop, "free", null);
+    return json({ success: true, cancelled: true });
+  }
+
+  return json({ success: false });
+};
+
 export default function PricingPage() {
   const { plan, shop, viewCount } = useLoaderData();
+  const actionData = useActionData();
+  const navigation = useNavigation();
+  const submit = useSubmit();
+  const isLoading = navigation.state === "submitting";
   const [isYearly, setIsYearly] = useState(false);
-  const shopSlug = shop.replace(".myshopify.com", "");
 
-  function handleUpgrade() {
-    window.top.location.href =
-      `https://admin.shopify.com/store/${shopSlug}/charges/announceplus/pricing_plans`;
+  function handleSubscribe(planName) {
+    const formData = new FormData();
+    formData.set("_action", "subscribe");
+    formData.set("plan", planName);
+    submit(formData, { method: "POST" });
+  }
+
+  function handleCancel() {
+    if (!confirm("Cancel your subscription? You'll be downgraded to the Free plan.")) return;
+    const formData = new FormData();
+    formData.set("_action", "cancel");
+    formData.set("chargeId", plan.chargeId || "");
+    submit(formData, { method: "POST" });
   }
 
   const plans = [
     {
-      id: "free",
-      name: "Free",
-      monthlyPrice: 0,
-      yearlyPrice: 0,
-      desc: "For stores getting started",
+      id: "free", name: "Free", monthlyPrice: 0, yearlyPrice: 0,
+      billingMonthly: null, billingYearly: null, desc: "For stores getting started",
       features: [
         { text: "1 announcement bar", ok: true },
         { text: "1 product shipping goal", ok: true },
@@ -54,11 +95,8 @@ export default function PricingPage() {
       ],
     },
     {
-      id: "starter",
-      name: "Starter",
-      monthlyPrice: 4.99,
-      yearlyPrice: 3.99,
-      yearlyTotal: 47.88,
+      id: "starter", name: "Starter", monthlyPrice: 4.99, yearlyPrice: 3.99,
+      yearlyTotal: 47.88, billingMonthly: "Starter", billingYearly: "Starter Yearly",
       desc: "For growing stores",
       features: [
         { text: "3 bars & goals", ok: true },
@@ -73,13 +111,9 @@ export default function PricingPage() {
       ],
     },
     {
-      id: "pro",
-      name: "Pro",
-      monthlyPrice: 9.99,
-      yearlyPrice: 7.99,
-      yearlyTotal: 95.88,
-      desc: "For serious stores",
-      highlight: true,
+      id: "pro", name: "Pro", monthlyPrice: 9.99, yearlyPrice: 7.99,
+      yearlyTotal: 95.88, billingMonthly: "Pro", billingYearly: "Pro Yearly",
+      desc: "For serious stores", highlight: true,
       features: [
         { text: "Unlimited bars & views", ok: true },
         { text: "Everything in Starter", ok: true },
@@ -95,44 +129,26 @@ export default function PricingPage() {
   ];
 
   return (
-    <Page title="Plan & billing" backAction={{ url: "/app" }}>
+    <Page title="Pricing" backAction={{ url: "/app" }}>
       <Layout>
-        {/* Current plan + usage */}
+        {actionData?.cancelled && (
+          <Layout.Section>
+            <Banner tone="success" title="Subscription cancelled. You're now on the Free plan." />
+          </Layout.Section>
+        )}
+
+        {/* Current plan */}
         <Layout.Section>
           <Card>
-            <BlockStack gap="400">
-              <InlineStack align="space-between" blockAlign="center">
-                <InlineStack gap="200" blockAlign="center">
-                  <Text variant="headingLg" as="h2">{plan.name} plan</Text>
-                  <Badge tone="success">Active</Badge>
-                </InlineStack>
-                {plan.id !== "pro" && (
-                  <Button variant="primary" onClick={handleUpgrade}>
-                    Upgrade
-                  </Button>
-                )}
+            <InlineStack align="space-between" blockAlign="center">
+              <InlineStack gap="200" blockAlign="center">
+                <Text variant="headingMd" as="h2">{plan.name} plan</Text>
+                <Badge tone="success">Active</Badge>
               </InlineStack>
-              <Divider />
-              <InlineStack align="space-between">
-                <Text variant="bodyMd" as="span">Monthly views</Text>
-                <Text variant="bodyMd" as="span" fontWeight="bold">
-                  {viewCount.toLocaleString()} / {plan.maxMonthlyViews === Infinity ? "\u221E" : plan.maxMonthlyViews.toLocaleString()}
-                </Text>
-              </InlineStack>
-              {plan.maxMonthlyViews !== Infinity && (
-                <ProgressBar
-                  progress={Math.min((viewCount / plan.maxMonthlyViews) * 100, 100)}
-                  size="small"
-                  tone={viewCount >= plan.maxMonthlyViews * 0.9 ? "critical" : undefined}
-                />
-              )}
-              <InlineStack align="space-between">
-                <Text variant="bodyMd" as="span">Announcement bars</Text>
-                <Text variant="bodyMd" as="span" fontWeight="bold">
-                  {plan.maxBars === Infinity ? "Unlimited" : plan.maxBars}
-                </Text>
-              </InlineStack>
-            </BlockStack>
+              <Text variant="bodySm" as="span" tone="subdued">
+                {(viewCount || 0).toLocaleString()} / {plan.maxMonthlyViews === Infinity ? "\u221E" : (plan.maxMonthlyViews || 0).toLocaleString()} views this month
+              </Text>
+            </InlineStack>
           </Card>
         </Layout.Section>
 
@@ -140,14 +156,10 @@ export default function PricingPage() {
         <Layout.Section>
           <InlineStack align="center" gap="300" blockAlign="center">
             <Text as="span" variant="bodyMd" fontWeight={!isYearly ? "bold" : "regular"}>Monthly</Text>
-            <div
-              onClick={() => setIsYearly(!isYearly)}
-              style={{
-                width: 48, height: 26, borderRadius: 13,
-                background: isYearly ? "#2563eb" : "#c4c4c4",
-                position: "relative", cursor: "pointer", transition: "background 0.2s",
-              }}
-            >
+            <div onClick={() => setIsYearly(!isYearly)} style={{
+              width: 48, height: 26, borderRadius: 13, background: isYearly ? "#2563eb" : "#c4c4c4",
+              position: "relative", cursor: "pointer", transition: "background 0.2s",
+            }}>
               <div style={{
                 width: 20, height: 20, borderRadius: "50%", background: "#fff",
                 position: "absolute", top: 3, left: isYearly ? 25 : 3,
@@ -166,7 +178,10 @@ export default function PricingPage() {
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16, alignItems: "stretch" }}>
             {plans.map((p) => {
               const isCurrent = plan.id === p.id;
+              const isUpgrade = (plan.id === "free" && p.id !== "free") || (plan.id === "starter" && p.id === "pro");
+              const isDowngrade = (plan.id === "pro" && p.id !== "pro") || (plan.id === "starter" && p.id === "free");
               const displayPrice = isYearly ? p.yearlyPrice : p.monthlyPrice;
+              const billingName = isYearly ? p.billingYearly : p.billingMonthly;
 
               return (
                 <div key={p.id} style={{
@@ -181,13 +196,11 @@ export default function PricingPage() {
                       padding: "3px 14px", borderRadius: 20,
                     }}>MOST POPULAR</div>
                   )}
-
                   <InlineStack align="space-between" blockAlign="center">
                     <Text variant="headingMd" as="h2">{p.name}</Text>
                     {isCurrent && <Badge tone="success">Current</Badge>}
                   </InlineStack>
                   <Text variant="bodySm" as="p" tone="subdued">{p.desc}</Text>
-
                   <div style={{ marginTop: 12, marginBottom: 4 }}>
                     <InlineStack gap="100" blockAlign="end">
                       <Text variant="heading2xl" as="span">${displayPrice.toFixed(2)}</Text>
@@ -197,9 +210,7 @@ export default function PricingPage() {
                   <Text variant="bodySm" as="p" tone="subdued">
                     {p.monthlyPrice === 0 ? "Free forever" : isYearly ? `$${p.yearlyTotal.toFixed(2)}/year — save 20%` : "Billed monthly"}
                   </Text>
-
                   <div style={{ margin: "16px 0" }}><Divider /></div>
-
                   <div style={{ flex: 1 }}>
                     <BlockStack gap="150">
                       {p.features.map((f, i) => (
@@ -212,19 +223,24 @@ export default function PricingPage() {
                       ))}
                     </BlockStack>
                   </div>
-
                   <div style={{ marginTop: 20 }}>
                     {isCurrent ? (
-                      <Button fullWidth disabled>Current plan</Button>
-                    ) : p.monthlyPrice > plan.price ? (
-                      <Button fullWidth variant={p.highlight ? "primary" : undefined} onClick={handleUpgrade}>
+                      plan.id !== "free" ? (
+                        <Button fullWidth tone="critical" variant="plain" onClick={handleCancel} loading={isLoading}>
+                          Cancel subscription
+                        </Button>
+                      ) : (
+                        <Button fullWidth disabled>Current plan</Button>
+                      )
+                    ) : isUpgrade ? (
+                      <Button fullWidth variant="primary" onClick={() => handleSubscribe(billingName)} loading={isLoading}>
                         Upgrade to {p.name}
                       </Button>
-                    ) : (
-                      <Button fullWidth onClick={handleUpgrade}>
-                        Change to {p.name}
+                    ) : isDowngrade ? (
+                      <Button fullWidth onClick={() => p.id === "free" ? handleCancel() : handleSubscribe(billingName)} loading={isLoading}>
+                        Downgrade to {p.name}
                       </Button>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               );

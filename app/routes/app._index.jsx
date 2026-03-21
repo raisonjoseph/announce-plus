@@ -595,14 +595,16 @@ export default function DashboardPage() {
                 <Text as="span" fontWeight="bold">
                   {plan?.name || "Free"}
                 </Text>{" "}
-                ({(viewCount || 0).toLocaleString()} / {viewLimit === Infinity ? "\u221E" : (viewLimit || 0).toLocaleString()} monthly views). One visitor can
+                ({(viewCount || 0).toLocaleString()} / {!viewLimit || viewLimit === Infinity || viewLimit === 0 ? "\u221E" : viewLimit.toLocaleString()} monthly views). One visitor can
                 have multiple views per session.
               </Text>
-              <ProgressBar
-                progress={Math.min(((viewCount || 0) / (viewLimit || 2000)) * 100, 100)}
-                size="small"
-                tone={(viewCount || 0) >= (viewLimit || 2000) * 0.9 ? "critical" : undefined}
-              />
+              {viewLimit && viewLimit !== Infinity && viewLimit > 0 && (
+                <ProgressBar
+                  progress={Math.min(((viewCount || 0) / viewLimit) * 100, 100)}
+                  size="small"
+                  tone={(viewCount || 0) >= viewLimit * 0.9 ? "critical" : undefined}
+                />
+              )}
               {plan?.id !== "pro" && (
                 <InlineStack align="end">
                   <Button url="/app/pricing" size="slim">

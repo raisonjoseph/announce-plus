@@ -71,8 +71,8 @@ export const loader = async ({ request }) => {
     apiKey: process.env.SHOPIFY_API_KEY || "",
     isDev,
     plan: shopPlan,
-    viewLimit: shopPlan.maxMonthlyViews,
-    viewCount: monthlyViewCount,
+    viewLimit: shopPlan.maxMonthlyViews || 2000,
+    viewCount: monthlyViewCount || 0,
     setup,
   });
 };
@@ -595,7 +595,7 @@ export default function DashboardPage() {
                 <Text as="span" fontWeight="bold">
                   {plan.name}
                 </Text>{" "}
-                ({viewCount} / {viewLimit} monthly views). One visitor can
+                ({(viewCount || 0).toLocaleString()} / {viewLimit === Infinity ? "\u221E" : (viewLimit || 0).toLocaleString()} monthly views). One visitor can
                 have multiple views per session.
               </Text>
               <ProgressBar
@@ -683,7 +683,7 @@ export default function DashboardPage() {
                       {placementLabels[ann.placement] || ann.placement}
                     </IndexTable.Cell>
                     <IndexTable.Cell>
-                      {ann.viewCount.toLocaleString()}
+                      {(ann.viewCount || 0).toLocaleString()}
                     </IndexTable.Cell>
                     <IndexTable.Cell>
                       <Badge

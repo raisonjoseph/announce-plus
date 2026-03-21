@@ -1,6 +1,5 @@
 import prisma from "./db.server";
 import { getPlanConfig, getPlanLimits, getPlanIdFromBillingName } from "./plans";
-import { STARTER_PLAN, STARTER_YEARLY_PLAN, PRO_PLAN, PRO_YEARLY_PLAN } from "./shopify.server";
 
 export async function getShopPlan(shop) {
   let shopPlan = await prisma.shopPlan.findUnique({ where: { shop } });
@@ -32,8 +31,9 @@ export async function updateShopPlan(shop, planId, chargeId = null) {
 
 export async function syncPlanFromBilling(billing, shop) {
   try {
+    // With managed pricing, check if there's an active subscription
     const { hasActivePayment, appSubscriptions } = await billing.check({
-      plans: [STARTER_PLAN, STARTER_YEARLY_PLAN, PRO_PLAN, PRO_YEARLY_PLAN],
+      plans: ["Starter", "Starter Yearly", "Pro", "Pro Yearly"],
       isTest: true,
     });
 
@@ -47,7 +47,8 @@ export async function syncPlanFromBilling(billing, shop) {
     await updateShopPlan(shop, planId, active.id);
     return getShopPlan(shop);
   } catch (e) {
-    console.error("Failed to sync billing:", e);
+    // If billing check fails (e.g., managed pricing), just return current plan
+    console.error("Failed to sync billing:", e.message);
     return getShopPlan(shop);
   }
 }

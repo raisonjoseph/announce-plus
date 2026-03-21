@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { json } from "@remix-run/node";
-import { useLoaderData, useNavigation, useSubmit } from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
 import {
   Page,
   Layout,
@@ -24,58 +24,9 @@ export const loader = async ({ request }) => {
   return json({ plan, shop });
 };
 
-export const action = async ({ request }) => {
-  const { billing, session } = await authenticate.admin(request);
-  const formData = await request.formData();
-  const actionType = formData.get("_action");
-
-  if (actionType === "subscribe") {
-    const planName = formData.get("plan");
-    await billing.request({
-      plan: planName,
-      isTest: true,
-    });
-    return null;
-  }
-
-  if (actionType === "cancel") {
-    const subscriptionId = formData.get("chargeId");
-    if (subscriptionId) {
-      await billing.cancel({
-        subscriptionId,
-        isTest: true,
-        prorate: true,
-      });
-    }
-    const { updateShopPlan } = await import("../plan.server");
-    await updateShopPlan(session.shop, "free", null);
-    return json({ success: true, cancelled: true });
-  }
-
-  return json({ success: false });
-};
-
 export default function PricingPage() {
-  const { plan } = useLoaderData();
-  const navigation = useNavigation();
-  const submit = useSubmit();
-  const isLoading = navigation.state === "submitting";
+  const { plan, shop } = useLoaderData();
   const [isYearly, setIsYearly] = useState(false);
-
-  function handleSubscribe(planName) {
-    const formData = new FormData();
-    formData.set("_action", "subscribe");
-    formData.set("plan", planName);
-    submit(formData, { method: "POST" });
-  }
-
-  function handleCancel() {
-    if (!confirm("Cancel your subscription? You'll be downgraded to the Free plan.")) return;
-    const formData = new FormData();
-    formData.set("_action", "cancel");
-    formData.set("chargeId", plan.chargeId || "");
-    submit(formData, { method: "POST" });
-  }
 
   const plans = [
     {
@@ -83,9 +34,6 @@ export default function PricingPage() {
       name: "Free",
       monthlyPrice: 0,
       yearlyPrice: 0,
-      billingMonthly: null,
-      billingYearly: null,
-      period: "forever",
       features: [
         { text: "1 announcement bar", included: true },
         { text: "1 product shipping goal", included: true },
@@ -104,8 +52,6 @@ export default function PricingPage() {
       monthlyPrice: 4.99,
       yearlyPrice: 3.99,
       yearlyTotal: 47.88,
-      billingMonthly: "Starter",
-      billingYearly: "Starter Yearly",
       savePercent: 20,
       features: [
         { text: "3 announcement bars", included: true },
@@ -125,8 +71,6 @@ export default function PricingPage() {
       monthlyPrice: 9.99,
       yearlyPrice: 7.99,
       yearlyTotal: 95.88,
-      billingMonthly: "Pro",
-      billingYearly: "Pro Yearly",
       savePercent: 20,
       highlight: true,
       features: [
@@ -150,7 +94,9 @@ export default function PricingPage() {
           <Banner tone="info">
             <p>
               You're on the <strong>{plan.name}</strong> plan.
-              {plan.id !== "free" && " All charges are handled through your Shopify bill."}
+              {plan.id !== "free"
+                ? " All charges are handled through your Shopify bill."
+                : " To upgrade, go to your Shopify admin → Apps → AnnouncePlus → choose a plan."}
             </p>
           </Banner>
         </Layout.Section>
@@ -164,28 +110,16 @@ export default function PricingPage() {
             <div
               onClick={() => setIsYearly(!isYearly)}
               style={{
-                width: 48,
-                height: 26,
-                borderRadius: 13,
+                width: 48, height: 26, borderRadius: 13,
                 background: isYearly ? "#2563eb" : "#c4c4c4",
-                position: "relative",
-                cursor: "pointer",
-                transition: "background 0.2s",
+                position: "relative", cursor: "pointer", transition: "background 0.2s",
               }}
             >
-              <div
-                style={{
-                  width: 20,
-                  height: 20,
-                  borderRadius: "50%",
-                  background: "#fff",
-                  position: "absolute",
-                  top: 3,
-                  left: isYearly ? 25 : 3,
-                  transition: "left 0.2s",
-                  boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                }}
-              />
+              <div style={{
+                width: 20, height: 20, borderRadius: "50%", background: "#fff",
+                position: "absolute", top: 3, left: isYearly ? 25 : 3,
+                transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+              }} />
             </div>
             <InlineStack gap="100" blockAlign="center">
               <Text as="span" variant="bodyMd" fontWeight={isYearly ? "bold" : "regular"}>
@@ -198,56 +132,26 @@ export default function PricingPage() {
 
         {/* Plan cards */}
         <Layout.Section>
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(3, 1fr)",
-              gap: "16px",
-              alignItems: "stretch",
-            }}
-          >
+          <div style={{
+            display: "grid", gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "16px", alignItems: "stretch",
+          }}>
             {plans.map((p) => {
               const isCurrent = plan.id === p.id;
-              const isUpgrade =
-                (plan.id === "free" && p.id !== "free") ||
-                (plan.id === "starter" && p.id === "pro");
-              const isDowngrade =
-                (plan.id === "pro" && p.id !== "pro") ||
-                (plan.id === "starter" && p.id === "free");
               const displayPrice = isYearly ? p.yearlyPrice : p.monthlyPrice;
-              const billingName = isYearly ? p.billingYearly : p.billingMonthly;
 
               return (
-                <div
-                  key={p.id}
-                  style={{
-                    border: p.highlight ? "2px solid #2563eb" : "1px solid #e2e8f0",
-                    borderRadius: 12,
-                    padding: "24px",
-                    background: "#fff",
-                    display: "flex",
-                    flexDirection: "column",
-                    position: "relative",
-                  }}
-                >
+                <div key={p.id} style={{
+                  border: p.highlight ? "2px solid #2563eb" : "1px solid #e2e8f0",
+                  borderRadius: 12, padding: "24px", background: "#fff",
+                  display: "flex", flexDirection: "column", position: "relative",
+                }}>
                   {p.highlight && (
-                    <div
-                      style={{
-                        position: "absolute",
-                        top: -12,
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        background: "#2563eb",
-                        color: "#fff",
-                        fontSize: 11,
-                        fontWeight: 700,
-                        padding: "3px 14px",
-                        borderRadius: 20,
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      MOST POPULAR
-                    </div>
+                    <div style={{
+                      position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)",
+                      background: "#2563eb", color: "#fff", fontSize: 11, fontWeight: 700,
+                      padding: "3px 14px", borderRadius: 20, whiteSpace: "nowrap",
+                    }}>MOST POPULAR</div>
                   )}
 
                   <InlineStack align="space-between" blockAlign="center">
@@ -261,9 +165,7 @@ export default function PricingPage() {
                         ${displayPrice.toFixed(2)}
                       </Text>
                       {p.monthlyPrice > 0 && (
-                        <Text variant="bodySm" as="span" tone="subdued">
-                          /mo
-                        </Text>
+                        <Text variant="bodySm" as="span" tone="subdued">/mo</Text>
                       )}
                     </InlineStack>
                   </div>
@@ -275,27 +177,19 @@ export default function PricingPage() {
                         : "Billed monthly"}
                   </Text>
 
-                  <div style={{ margin: "16px 0" }}>
-                    <Divider />
-                  </div>
+                  <div style={{ margin: "16px 0" }}><Divider /></div>
 
-                  {/* Features */}
                   <div style={{ flex: 1 }}>
                     <BlockStack gap="200">
                       {p.features.map((f, i) => (
                         <InlineStack key={i} gap="200" blockAlign="center">
                           <span style={{
                             color: f.included ? "#22c55e" : "#d1d5db",
-                            fontWeight: 700,
-                            fontSize: 14,
+                            fontWeight: 700, fontSize: 14,
                           }}>
                             {f.included ? "\u2713" : "\u2715"}
                           </span>
-                          <Text
-                            variant="bodySm"
-                            as="span"
-                            tone={f.included ? undefined : "subdued"}
-                          >
+                          <Text variant="bodySm" as="span" tone={f.included ? undefined : "subdued"}>
                             {f.text}
                           </Text>
                         </InlineStack>
@@ -303,46 +197,18 @@ export default function PricingPage() {
                     </BlockStack>
                   </div>
 
-                  {/* Button — always at bottom */}
                   <div style={{ marginTop: 20 }}>
                     {isCurrent ? (
-                      plan.id !== "free" ? (
-                        <Button
-                          fullWidth
-                          tone="critical"
-                          variant="plain"
-                          onClick={handleCancel}
-                          loading={isLoading}
-                        >
-                          Cancel subscription
-                        </Button>
-                      ) : (
-                        <Button fullWidth disabled>
-                          Current plan
-                        </Button>
-                      )
-                    ) : isUpgrade ? (
+                      <Button fullWidth disabled>Current plan</Button>
+                    ) : (
                       <Button
                         fullWidth
-                        variant="primary"
-                        onClick={() => handleSubscribe(billingName)}
-                        loading={isLoading}
+                        variant={p.highlight ? "primary" : undefined}
+                        url={`https://${shop}/admin/apps/announceplus`}
                       >
-                        Upgrade to {p.name}
+                        {p.monthlyPrice > plan.price ? "Upgrade" : "Change"} to {p.name}
                       </Button>
-                    ) : isDowngrade ? (
-                      <Button
-                        fullWidth
-                        onClick={() =>
-                          p.id === "free"
-                            ? handleCancel()
-                            : handleSubscribe(billingName)
-                        }
-                        loading={isLoading}
-                      >
-                        Downgrade to {p.name}
-                      </Button>
-                    ) : null}
+                    )}
                   </div>
                 </div>
               );
